@@ -1,1 +1,1 @@
-# dbx_llmops-workshop
+# dbx_llmops-demo
