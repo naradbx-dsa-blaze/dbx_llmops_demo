@@ -1,23 +1,49 @@
-# Databricks notebook source
+import gradio as gr
 import mlflow.deployments
 from databricks.sdk import WorkspaceClient
-import databricks.sdk.service.catalog as c
+import re
 
-deploy_client = mlflow.deployments.get_deploy_client("databricks")
 
-prompt = "Summarize the patients medical history, including any relevant past illnesses, surgeries, or chronic conditions.\n\n### Discharge Summary Patient Name: Unavailable Gender: Female Age: 32 years Medical Record No.: Unavailable Admission Date: Unavailable Discharge Date: Unavailable Reason for Admission: The 32-year-old female presented with a sudden increase in the size of the solitary nodule in the left lobe of the thyroid with hypothyroidism since 6 months. Hospital Course: The patient underwent a total thyroidectomy as fine needle aspiration cytology (FNAC) of the nodule showed features of HT with papillary carcinoma. During the surgery, nodularity was found on the outer surface. The left lobe was measured 4 cm × 2.5 cm × 1.5cm and the right lobe measured 3 cm × 2 cm × 1 cm. There were areas of HT with prominent lymphoid follicles having germinal center and atrophied thyroid follicles lined by hurthle cells. A tiny focus of follicular variant of papillary carcinoma was also seen. Another focus showed effacement of the thyroid parenchyma by diffuse monotonous lymphoid infiltrate suggestive of NHL (B-cell lineage). Treatment: Levothyroxine was initiated at 300mcg/day and the patient was treated with chemotherapy (R-CHOP regime). Discharge Condition: The patient tolerated the chemotherapy well. At 12 months of follow-up, no recurrence or metastasis was noted. Diagnosis: HT coexisting with papillary carcinoma and primary NHL (B-cell lineage). Follow-Up Care: The patient is advised to undergo regular follow-up care to monitor her health and ensure timely intervention in case of any changes or complications.### Response:"
+def filter_incomplete_sentence(text):
+    pattern = r"(?:[^.!?]+(?:[.!?](?=\s|$))+\s?)"
+    filtered_sentence = "".join(re.findall(pattern, text))
+    return filtered_sentence.strip()
 
-input = {"prompt": prompt, "max_tokens": 150}
 
-response = deploy_client.predict(endpoint="ft_mistral7b_endpoint", inputs=input)
+def summarize_medical_history(prompt):
+    # Get the deployment client
+    deploy_client = mlflow.deployments.get_deploy_client("databricks")
 
-# Print the response to inspect the structure
-print(response)
+    # Define input for the model
+    input_data = {"prompt": prompt, "max_tokens": 150}
 
-# COMMAND ----------
+    # Make prediction
+    response = deploy_client.predict(
+        endpoint="ft_mistral7b_endpoint", inputs=input_data
+    )
 
-# MAGIC %pip install gradio==3.48.0
+    # Extract and return the response
+    get_text = response["choices"][0]["text"]
 
-# COMMAND ----------
+    summary = filter_incomplete_sentence(get_text)
 
-dbutils.library.restartPython()
+    return summary
+
+
+# Define the input component
+input_text = gr.Textbox(
+    lines=20,
+    label="Enter the detailed notes here",
+    placeholder="Paste clinical notes here...",
+)
+
+# Define the output component
+output_text = gr.Textbox(label="Summary", readonly=True)
+
+# Create Gradio interface
+gr.Interface(
+    fn=summarize_medical_history,
+    inputs=input_text,
+    outputs=output_text,
+    title="Clinical Notes Summarization",
+).launch()
