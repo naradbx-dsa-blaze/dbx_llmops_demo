@@ -8,7 +8,7 @@ dbutils.widgets.text("catalog", "ang_nara_catalog")
 dbutils.widgets.text("database", "llmops")
 dbutils.widgets.text("volume_storage", "model_weights")
 
-dbutils.widgets.text("model_name", "PrunaAI/dbrx-base-bnb-4bit") 
+dbutils.widgets.text("model_name", "mistralai/Mistral-7B-v0.1") 
 dbutils.widgets.text("hugging-face-token-secret", "medtron-hf-token")
 
 # COMMAND ----------
@@ -85,9 +85,9 @@ lr_scheduler_type = "cosine" #The cosine lrs function has been shown to perform 
 max_steps = -1 #Number of optimizer update steps
 warmup_ratio = 0.2 #Define training warmup fraction
 group_by_length = True #Group sequences into batches with same length (saves memory and speeds up training considerably)
-save_steps = 2000 #Save checkpoint every X updates steps
-logging_steps = 2000 #Log every X updates steps
-eval_steps= 2000 #Eval steps
+save_steps = 500 #Save checkpoint every X updates steps
+logging_steps = 500 #Log every X updates steps
+eval_steps= 500 #Eval steps
 evaluation_strategy = "steps" #Display val loss for every step
 save_strategy = "steps" 
 output_dir = "/Volumes/ang_nara_catalog/llmops/model_weights"
@@ -110,7 +110,7 @@ df = spark.sql("SELECT * FROM ang_nara_catalog.llmops.refined_clinical_data LIMI
 
 # MAGIC %md ## Fine Tuning GPU Options
 # MAGIC Runtimes: 
-# MAGIC NVIDIA A10G on G5 GPU (Driver: g5.24xlarge, Worker: g5.24xlarge) = ~2 hours for 5k samples
+# MAGIC NVIDIA A100 GPU = ~18 hours for 10k samples
 
 # COMMAND ----------
 
@@ -202,7 +202,7 @@ dataset_shuffled = dataset.shuffle(seed=42)
 
 #Split dataset into train and val
 train_val = dataset.train_test_split(
-    test_size=6000, shuffle=True, seed=42
+    test_size=3000, shuffle=True, seed=42
 )
 train_data = (
     train_val["train"].map(template_dataset)
