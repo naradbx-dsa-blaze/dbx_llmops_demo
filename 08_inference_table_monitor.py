@@ -15,6 +15,7 @@ if len(endpoint_name) == 0:
 
 import requests
 from typing import Dict
+import time
 
 
 def get_endpoint_status(endpoint_name: str) -> Dict:
@@ -242,7 +243,7 @@ import databricks.lakehouse_monitoring as lm
 
 monitor_params = {
     "profile_type": lm.TimeSeries(
-        timestamp_col="__db_timestamp",
+        timestamp_col="timestamp_ms",
         granularities=GRANULARITIES,
     ),
     "output_schema_name": f"{catalog}.{schema}",
@@ -253,14 +254,14 @@ monitor_params = {
 }
 
 try:
-    info = lm.create_monitor(table_name=payload_table_name, **monitor_params)
+    info = lm.create_monitor(table_name=processed_table_name, **monitor_params)
     print(info)
 except Exception as e:
     # Ensure the exception was expected
     assert "RESOURCE_ALREADY_EXISTS" in str(e), f"Unexpected error: {e}"
 
     # Update the monitor if any parameters of this notebook have changed.
-    lm.update_monitor(table_name=payload_table_name, updated_params=monitor_params)
+    lm.update_monitor(table_name=processed_table_name, updated_params=monitor_params)
     # Refresh metrics calculated on the requests table.
-    refresh_info = lm.run_refresh(table_name=payload_table_name)
+    refresh_info = lm.run_refresh(table_name=processed_table_name)
     print(refresh_info)
