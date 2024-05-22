@@ -146,7 +146,7 @@ windowSpec = Window.orderBy(lit(1))
 payloads = payloads.withColumn("id", F.row_number().over(windowSpec))
 
 #add id column to the test table
-test_df = spark.read.table("ang_nara_catalog.llmops.test_clinical_data")
+test_df = spark.read.table("ang_nara_catalog.llmops.create_test_data")
 test_df = test_df.withColumnRenamed("summary", "ground_truth")
 windowSpec = Window.orderBy(lit(1))
 test_df = test_df.withColumn("id", F.row_number().over(windowSpec))
@@ -214,16 +214,71 @@ payloads = payloads.drop("date", "status_code", "sampling_fraction", "client_req
 
 # COMMAND ----------
 
+display(payloads)
+
+# COMMAND ----------
+
+# Dynamic function to reverse values in a specific column
+def reverse_column(df, column_name):
+    # Add a unique row number to each row
+    window_spec = Window.orderBy(lit(1))
+    df_with_row_num = df.withColumn("row_num", row_number().over(window_spec))
+
+    # Create a DataFrame with reversed values for the specified column
+    reversed_values = df_with_row_num.select(col(column_name)).orderBy(col("row_num").desc()).rdd.map(lambda row: row[0]).collect()
+
+    # Create a new DataFrame with the reversed column
+    df_reversed = df_with_row_num.rdd.zipWithIndex().map(lambda row: tuple(row[0][:-1]) + (reversed_values[row[1]],)).toDF(df.columns)
+    
+    return df_reversed
+
+# Reverse the values in column 'D'
+payloads = reverse_column(payloads, "ground_truth")
+payloads.show()
+
+# COMMAND ----------
+
+#write processed payloads to delta table
+payloads.write.format("delta").saveAsTable("ang_nara_catalog.llmops.processed_payloads")
+
+# COMMAND ----------
+
+# Initialize the processed requests table. Turn on CDF (for monitoring) and enable special characters in column names. 
+def create_processed_table_if_not_exists(table_name, requests_with_metrics):
+    (DeltaTable.createIfNotExists(spark)
+        .tableName(table_name)
+        .addColumns(requests_with_metrics.schema)
+        .property("delta.enableChangeDataFeed", "true")
+        .property("delta.columnMapping.mode", "name") \
+        .property("delta.minReaderVersion", "2") \
+        .property("delta.minWriterVersion", "5")
+        .execute())
+
+# COMMAND ----------
+
 from delta.tables import DeltaTable
 
-# Define the compute_metrics and create_processed_table_if_not_exists functions if not defined
-requests_with_metrics = compute_metrics(payloads)
-(requests_with_metrics.write
-                    .format("delta")
-                    .mode("append")
-                    .option("delta.enableChangeDataFeed", "true")
-                    .option("delta.columnMapping.mode", "name")
-                    .saveAsTable(processed_table_name))
+#define checkpoint location for streaming
+checkpoint_location = "/Volumes/ang_nara_catalog/llmops/checkpoint"
+
+# Check whether the table exists before proceeding.
+DeltaTable.forName(spark, "ang_nara_catalog.llmops.processed_payloads")
+
+# Unpack the requests as a stream.
+requests_raw = spark.readStream.table("ang_nara_catalog.llmops.processed_payloads")
+
+# Compute text evaluation metrics.
+requests_with_metrics = compute_metrics(requests_raw)
+
+# Persist the requests stream, with a defined checkpoint path for this table.
+create_processed_table_if_not_exists(processed_table_name, requests_with_metrics)
+
+(requests_with_metrics.writeStream
+                      .trigger(availableNow=True)
+                      .format("delta")
+                      .outputMode("append")
+                      .option("checkpointLocation", checkpoint_location)
+                      .toTable(processed_table_name).awaitTermination())
 
 # COMMAND ----------
 

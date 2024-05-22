@@ -1,4 +1,9 @@
 # Databricks notebook source
+# MAGIC %pip install gradio
+# MAGIC dbutils.library.restartPython() 
+
+# COMMAND ----------
+
 import gradio as gr
 import mlflow.deployments
 from databricks.sdk import WorkspaceClient
@@ -24,6 +29,6 @@ def summarize_medical_history(prompt):
 # Define the input component
 input_text = gr.Textbox(lines=20, label="Enter the detailed notes here", placeholder="Paste clinical notes here...")
 # Define the output component
-output_text = gr.Textbox(label="Summary", readonly=True)
+output_text = gr.Textbox(label="Summary")
 # Create Gradio interface
-gr.Interface(fn=summarize_medical_history, inputs=input_text, outputs=output_text, title="Clinical Notes Summarization").launch()
+gr.Interface(fn=summarize_medical_history, inputs=input_text, outputs=output_text, title="Clinical Notes Summarization").launch(share=True)

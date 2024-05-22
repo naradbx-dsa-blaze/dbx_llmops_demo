@@ -4,7 +4,7 @@ import json
 import time
 
 client = get_deploy_client("databricks")
-endpoint = client.get_endpoint(endpoint="dbdemos_fsi_fraud")
+endpoint = client.get_endpoint(endpoint="ft_mistral7b_endpoint")
 
 def check_state(endpoint):
     data = json.loads(endpoint)
@@ -22,3 +22,11 @@ def check_state(endpoint):
 # Triggering the function
 json_data = json.dumps(endpoint)
 result = check_state(json_data)
+
+# COMMAND ----------
+
+dbutils.jobs.taskValues.set(key = "status", value = result)
+
+# COMMAND ----------
+
+dbutils.jobs.taskValues.get(taskKey="06_check_endpoint_status", key="status", default=result, debugValue=result)
