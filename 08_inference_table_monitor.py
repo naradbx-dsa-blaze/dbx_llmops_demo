@@ -218,26 +218,6 @@ display(payloads)
 
 # COMMAND ----------
 
-# Dynamic function to reverse values in a specific column
-def reverse_column(df, column_name):
-    # Add a unique row number to each row
-    window_spec = Window.orderBy(lit(1))
-    df_with_row_num = df.withColumn("row_num", row_number().over(window_spec))
-
-    # Create a DataFrame with reversed values for the specified column
-    reversed_values = df_with_row_num.select(col(column_name)).orderBy(col("row_num").desc()).rdd.map(lambda row: row[0]).collect()
-
-    # Create a new DataFrame with the reversed column
-    df_reversed = df_with_row_num.rdd.zipWithIndex().map(lambda row: tuple(row[0][:-1]) + (reversed_values[row[1]],)).toDF(df.columns)
-    
-    return df_reversed
-
-# Reverse the values in column 'D'
-payloads = reverse_column(payloads, "ground_truth")
-payloads.show()
-
-# COMMAND ----------
-
 #write processed payloads to delta table
 payloads.write.format("delta").saveAsTable("ang_nara_catalog.llmops.processed_payloads")
 
