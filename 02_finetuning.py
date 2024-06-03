@@ -35,7 +35,7 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# DBTITLE 1,Import libraries 
+# DBTITLE 1,Import libraries
 #import libraries
 import os, json, torch
 from datasets import Dataset, NamedSplit
