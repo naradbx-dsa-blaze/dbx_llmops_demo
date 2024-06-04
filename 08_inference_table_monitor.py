@@ -141,20 +141,16 @@ payloads = payloads.withColumn("response", filter_incomplete_sentence(payloads["
 from pyspark.sql.functions import row_number, lit
 from pyspark.sql.window import Window
 
-#add id filed to the payload table
-windowSpec = Window.orderBy(lit(1))
-payloads = payloads.withColumn("id", F.row_number().over(windowSpec))
-
-#add id column to the test table
+#add client_request_id column to the test table
 test_df = spark.read.table("ang_nara_catalog.llmops.create_test_data")
 test_df = test_df.withColumnRenamed("summary", "ground_truth")
 windowSpec = Window.orderBy(lit(1))
-test_df = test_df.withColumn("id", F.row_number().over(windowSpec))
+test_df = test_df.withColumn("client_request_id", F.row_number().over(windowSpec))
 
 # COMMAND ----------
 
 #join ground_truth table with inference table
-joined_df = payloads.join(test_df, "id", "inner").drop("id")
+joined_df = payloads.join(test_df, "client_request_id", "inner").drop("id")
 payloads = joined_df
 
 # COMMAND ----------
@@ -214,12 +210,8 @@ payloads = payloads.drop("date", "status_code", "sampling_fraction", "client_req
 
 # COMMAND ----------
 
-display(payloads)
-
-# COMMAND ----------
-
 #write processed payloads to delta table
-payloads.write.format("delta").saveAsTable("ang_nara_catalog.llmops.processed_payloads")
+payloads.write.format("delta").mode("overwrite").saveAsTable("ang_nara_catalog.llmops.processed_payloads")
 
 # COMMAND ----------
 
