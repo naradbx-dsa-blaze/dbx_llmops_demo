@@ -1,4 +1,5 @@
 # Databricks notebook source
+import mlflow
 from mlflow.deployments import get_deploy_client
 import json
 import time
@@ -30,7 +31,3 @@ dbutils.jobs.taskValues.set(key = "status", value = result)
 # COMMAND ----------
 
 dbutils.jobs.taskValues.get(taskKey="06_check_endpoint_status", key="status", default=result, debugValue=result)
-
-# COMMAND ----------
-
-from pyspark.dbutils import DBUtils
