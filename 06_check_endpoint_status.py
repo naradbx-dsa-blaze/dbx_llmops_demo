@@ -1,4 +1,8 @@
 # Databricks notebook source
+!pip install mlflow
+
+# COMMAND ----------
+
 import mlflow
 from mlflow.deployments import get_deploy_client
 import json
