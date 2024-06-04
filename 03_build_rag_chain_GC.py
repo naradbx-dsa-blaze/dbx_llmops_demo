@@ -1,6 +1,7 @@
 # Databricks notebook source
 # MAGIC %pip install mlflow==2.10.1 lxml==4.9.3 langchain==0.1.5 databricks-vectorsearch==0.22 cloudpickle==2.2.1 databricks-sdk==0.18.0 cloudpickle==2.2.1 pydantic==2.5.2
 # MAGIC %pip install pip mlflow[databricks]==2.10.1
+# MAGIC %pip install --upgrade sqlalchemy
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -72,7 +73,7 @@ print(is_about_databricks_chain.invoke({
 
 # COMMAND ----------
 
-def test_demo_permissions(host, secret_scope, secret_key, OAuthID, vs_endpoint_name, index_name, embedding_endpoint_name = None, managed_embeddings = True):
+def test_demo_permissions(host, secret_scope, secret_key, vs_endpoint_name, index_name, embedding_endpoint_name = None, managed_embeddings = True):
   error = False
   CSS_REPORT = """
   <style>
@@ -165,8 +166,8 @@ def test_demo_permissions(host, secret_scope, secret_key, OAuthID, vs_endpoint_n
   try:
     from databricks.vector_search.client import VectorSearchClient
     # update vsc client to use service principal rather than pat
-    # vsc = VectorSearchClient(workspace_url=host, personal_access_token=secret, disable_notice=True)
-    vsc = VectorSearchClient(workspace_url=host, service_principal_client_id=OAuthID, service_principal_client_secret=secret_key)
+    vsc = VectorSearchClient(workspace_url=host, personal_access_token=secret, disable_notice=True)
+    # vsc = VectorSearchClient(workspace_url=host, service_principal_client_id=OAuthID, service_principal_client_secret=secret_key)
     vs_index = vsc.get_index(endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME, index_name=index_name)
     if embedding_endpoint_name:
       if managed_embeddings:
@@ -233,72 +234,65 @@ db = 'dbml'
 VECTOR_SEARCH_ENDPOINT_NAME = 'dbdoc_vs_endpoint'
 
 index_name=f"{catalog}.{db}.databricks_pdf_documentation_self_managed_vs_index"
-host = "https://e2-demo-field-eng.cloud.databricks.com/"
+host = "https://e2-demo-field-eng.cloud.databricks.com"
 
 #Let's make sure the secret is properly setup and can access our vector search index. Check the quick-start demo for more guidance
 
 #Setup service principal and secret scope and key
 
-# test_demo_permissions(host, secret_scope="dbrag", secret_key="rag_sp_token", OAuthID='c34047db25a0a6589e8df3f16641f160f205693d2cb65145b2043bbcedcc40b3', vs_endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME, index_name=index_name, embedding_endpoint_name="databricks-bge-large-en", managed_embeddings = False)
-
-
+test_demo_permissions(host, secret_scope="dbrag", secret_key="rag_pat_token", vs_endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME, index_name=index_name, embedding_endpoint_name="databricks-bge-large-en", managed_embeddings = False)
 
 # COMMAND ----------
 
-from databricks.vector_search.client import VectorSearchClient
+# from databricks.vector_search.client import VectorSearchClient
 
-catalog = 'guanyu_chen'
-db = 'dbml'
-VECTOR_SEARCH_ENDPOINT_NAME = 'dbdoc_vs_endpoint'
-client_id = 'cc109146-bfb6-412f-a488-1141a66ecad6'
-secret_key = dbutils.secrets.get(scope="dbrag", key="rag_sp_token")
+# catalog = 'guanyu_chen'
+# db = 'dbml'
+# VECTOR_SEARCH_ENDPOINT_NAME = 'dbdoc_vs_endpoint'
+# client_id = 'cc109146-bfb6-412f-a488-1141a66ecad6'
+# secret_key = dbutils.secrets.get(scope="dbrag", key="rag_sp_token")
 
-index_name=f"{catalog}.{db}.databricks_pdf_documentation_self_managed_vs_index"
-host = "https://e2-demo-field-eng.cloud.databricks.com/"
+# index_name=f"{catalog}.{db}.databricks_pdf_documentation_self_managed_vs_index"
+# host = "https://e2-demo-field-eng.cloud.databricks.com"
 
-vsc = VectorSearchClient(workspace_url=host, service_principal_client_id=client_id, service_principal_client_secret=secret_key)
-
-# COMMAND ----------
-
-from mlflow.deployments import get_deploy_client
-
-# bge-large-en Foundation models are available using the /serving-endpoints/databricks-bge-large-en/invocations api. 
-deploy_client = get_deploy_client("databricks")
-
-question = "How can I track billing usage on my workspaces?"
-
-response = deploy_client.predict(endpoint="databricks-bge-large-en", inputs={"input": [question]})
-embeddings = [e['embedding'] for e in response.data]
-
-results = vsc.get_index(VECTOR_SEARCH_ENDPOINT_NAME, index_name).similarity_search(
-  query_vector=embeddings[0],
-  columns=["url", "content"],
-  num_results=1)
-docs = results.get('result', {}).get('data_array', [])
-print(docs)
+# vsc = VectorSearchClient(workspace_url=host, service_principal_client_id=client_id, service_principal_client_secret=secret_key)
 
 # COMMAND ----------
 
-service_principal_id = dbutils.secrets.get(scope="dbrag", key="service-principal-id-key")
-print(service_principal_id)
+# from mlflow.deployments import get_deploy_client
+
+# # bge-large-en Foundation models are available using the /serving-endpoints/databricks-bge-large-en/invocations api. 
+# deploy_client = get_deploy_client("databricks")
+
+# question = "How can I track billing usage on my workspaces?"
+
+# response = deploy_client.predict(endpoint="databricks-bge-large-en", inputs={"input": [question]})
+# embeddings = [e['embedding'] for e in response.data]
+
+# results = vsc.get_index(VECTOR_SEARCH_ENDPOINT_NAME, index_name).similarity_search(
+#   query_vector=embeddings[0],
+#   columns=["url", "content"],
+#   num_results=1)
+# docs = results.get('result', {}).get('data_array', [])
+# print(docs)
 
 # COMMAND ----------
 
 from databricks.vector_search.client import VectorSearchClient
 from langchain_community.vectorstores import DatabricksVectorSearch
 from langchain_community.embeddings import DatabricksEmbeddings
-from langchain.chains import RetrievalQA
+# from langchain.chains import RetrievalQA
 import os
 
-os.environ['DATABRICKS_TOKEN'] = dbutils.secrets.get("dbrag", "rag_sp_token")
+os.environ['DATABRICKS_TOKEN'] = dbutils.secrets.get("dbrag", "rag_pat_token")
 
 embedding_model = DatabricksEmbeddings(endpoint="databricks-bge-large-en")
 
 def get_retriever(persist_dir: str = None):
     os.environ["DATABRICKS_HOST"] = host
     #Get the vector search index
-    #vsc = VectorSearchClient(workspace_url=host, personal_access_token=os.environ["DATABRICKS_TOKEN"])
-    vsc = VectorSearchClient(workspace_url=host, service_principal_client_id=, service_principal_client_secret=os.environ["DATABRICKS_TOKEN"])
+    vsc = VectorSearchClient(workspace_url=host, personal_access_token=os.environ["DATABRICKS_TOKEN"])
+    # vsc = VectorSearchClient(workspace_url=host, service_principal_client_id=, service_principal_client_secret=os.environ["DATABRICKS_TOKEN"])
     vs_index = vsc.get_index(
         endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME,
         index_name=index_name
@@ -449,7 +443,7 @@ non_relevant_dialog = {
 }
 print(f'Testing with a non relevant question...')
 response = full_chain.invoke(non_relevant_dialog)
-display_chat(non_relevant_dialog["messages"], response)
+print(non_relevant_dialog["messages"], response)
 
 # COMMAND ----------
 
@@ -462,4 +456,44 @@ dialog = {
 }
 print(f'Testing with relevant history and question...')
 response = full_chain.invoke(dialog)
-display_chat(dialog["messages"], response)
+print(dialog["messages"], response)
+
+# COMMAND ----------
+
+import cloudpickle
+import langchain
+import mlflow
+from mlflow.models import infer_signature
+
+catalog = 'guanyu_chen'
+db = 'dbml'
+
+mlflow.set_registry_uri("databricks-uc")
+model_name = f"{catalog}.{db}.db_chatbot_model"
+
+with mlflow.start_run(run_name="db_chatbot_rag") as run:
+    #Get our model signature from input/output
+    output = full_chain.invoke(dialog)
+    signature = infer_signature(dialog, output)
+
+    model_info = mlflow.langchain.log_model(
+        full_chain,
+        loader_fn=get_retriever,  # Load the retriever with DATABRICKS_TOKEN env as secret (for authentication).
+        artifact_path="chain",
+        registered_model_name=model_name,
+        pip_requirements=[
+            "mlflow==" + mlflow.__version__,
+            "langchain==" + langchain.__version__,
+            "databricks-vectorsearch",
+            "pydantic==2.5.2 --no-binary pydantic",
+            "cloudpickle=="+ cloudpickle.__version__
+        ],
+        input_example=dialog,
+        signature=signature,
+        example_no_conversion=True,
+    )
+
+# COMMAND ----------
+
+model = mlflow.langchain.load_model(model_info.model_uri)
+model.invoke(dialog)
