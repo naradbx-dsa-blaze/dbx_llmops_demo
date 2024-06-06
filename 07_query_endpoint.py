@@ -62,7 +62,7 @@ class MedicalHistorySummarizer:
         return summary
 
 # Create an instance of the summarizer
-summarizer = MedicalHistorySummarizer(db_path='/Volumes/ang_nara_catalog/llmops/data/client_request_id_counter.db-journal')
+summarizer = MedicalHistorySummarizer(db_path='client_request_id_counter.db')
 
 # Define the input component
 input_text = gr.Textbox(lines=20, label="Enter the detailed notes here", placeholder="Paste clinical notes here...")
