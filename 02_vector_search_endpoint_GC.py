@@ -84,6 +84,14 @@ print(f"Endpoint named {VECTOR_SEARCH_ENDPOINT_NAME} is ready.")
 
 # COMMAND ----------
 
+import time
+
+time.sleep(300)
+
+# sleep for 5 mins to wait for the completion of the index endpoint initial sync
+
+# COMMAND ----------
+
 from databricks.sdk import WorkspaceClient
 import databricks.sdk.service.catalog as c
 

@@ -1,33 +1,6 @@
 # Databricks notebook source
-# MAGIC %pip install databricks-sdk==0.19.1
+# MAGIC %pip install databricks-sdk==0.28.0
 # MAGIC dbutils.library.restartPython()
-
-# COMMAND ----------
-
-# import urllib
-# import json
-# import mlflow
-# from mlflow.tracking import MlflowClient
-
-# catalog = 'guanyu_chen'
-# db = 'dbml'
-
-# mlflow.set_registry_uri('databricks-uc')
-# client = MlflowClient()
-# model_name = f"{catalog}.{db}.db_chatbot_model"
-# serving_endpoint_name = f"db_endpoint_{catalog}_{db}"[:63]
-# latest_model = client.get_model_version_by_alias(model_name, "prod")
-
-# #TODO: use the sdk once model serving is available.
-# serving_client = EndpointApiClient()
-# # Start the endpoint using the REST API (you can do it using the UI directly)
-# auto_capture_config = {
-#     "catalog_name": catalog,
-#     "schema_name": db,
-#     "table_name_prefix": serving_endpoint_name
-#     }
-# environment_vars={"DATABRICKS_TOKEN": "{{secrets/dbrag/rag_pat_token}}"}
-# serving_client.create_endpoint_if_not_exists(serving_endpoint_name, model_name=model_name, model_version = latest_model.version, workload_size="Small", scale_to_zero_enabled=True, wait_start = True, auto_capture_config=auto_capture_config, environment_vars=environment_vars)
 
 # COMMAND ----------
 
