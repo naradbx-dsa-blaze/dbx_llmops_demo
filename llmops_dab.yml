@@ -1,0 +1,103 @@
+resources:
+  jobs:
+    dev_clinical_summarization_pipeline:
+      name: "[dev]clinical_summarization_pipeline"
+      description: LLMOps pipeline for text summarization
+      trigger:
+        pause_status: PAUSED
+        file_arrival:
+          url: /Volumes/ang_nara_catalog/llmops/data/
+      tasks:
+        - task_key: 01_ingestion
+          notebook_task:
+            notebook_path: 01_ingestion
+            source: GIT
+          job_cluster_key: 02_finetuning_cluster
+        - task_key: 02_finetuning
+          depends_on:
+            - task_key: 01_ingestion
+          notebook_task:
+            notebook_path: 02_finetuning
+            source: GIT
+          job_cluster_key: 02_finetuning_cluster
+        - task_key: 03_merge_model_weights
+          depends_on:
+            - task_key: 02_finetuning
+          notebook_task:
+            notebook_path: 03_merge_weights
+            source: GIT
+          job_cluster_key: 02_finetuning_cluster
+        - task_key: 04_mlflow_logging
+          depends_on:
+            - task_key: 03_merge_model_weights
+          notebook_task:
+            notebook_path: 04_mlflow_logging
+            source: GIT
+          job_cluster_key: 02_finetuning_cluster
+        - task_key: 05_create_serving_endpoint
+          depends_on:
+            - task_key: 03_merge_model_weights
+          notebook_task:
+            notebook_path: 05_create_serving_endpoint
+            source: GIT
+        - task_key: 06_check_endpoint_status
+          depends_on:
+            - task_key: 05_create_serving_endpoint
+          notebook_task:
+            notebook_path: 06_check_endpoint_status
+            source: GIT
+        - task_key: if_READY
+          depends_on:
+            - task_key: 06_check_endpoint_status
+          condition_task:
+            op: EQUAL_TO
+            left: "{{tasks.06_check_endpoint_status.values.status}}"
+            right: "1"
+        - task_key: 07_query_endpoint
+          depends_on:
+            - task_key: if_READY
+              outcome: "true"
+          notebook_task:
+            notebook_path: 07_query_endpoint
+            source: GIT
+          job_cluster_key: 02_finetuning_cluster
+        - task_key: 08_retry_endpoint
+          depends_on:
+            - task_key: if_READY
+              outcome: "false"
+          notebook_task:
+            notebook_path: 06_check_endpoint_status
+            source: GIT
+          job_cluster_key: 02_finetuning_cluster
+        - task_key: 08_monitor_inference_table
+          depends_on:
+            - task_key: 07_query_endpoint
+          notebook_task:
+            notebook_path: 08_monitor_inference_table
+            source: GIT
+          job_cluster_key: 02_finetuning_cluster
+      job_clusters:
+        - job_cluster_key: 02_finetuning_cluster
+          new_cluster:
+            cluster_name: ""
+            spark_version: 14.3.x-gpu-ml-scala2.12
+            aws_attributes:
+              first_on_demand: 1
+              availability: SPOT_WITH_FALLBACK
+              zone_id: us-west-2a
+              spot_bid_price_percent: 100
+            node_type_id: g4dn.xlarge
+            enable_elastic_disk: true
+            data_security_mode: SINGLE_USER
+            runtime_engine: STANDARD
+            autoscale:
+              min_workers: 2
+              max_workers: 8
+      git_source:
+        git_url: https://github.com/naradbx-dsa-blaze/dbx_llmops-workshop
+        git_provider: gitHub
+        git_branch: main
+      tags:
+        llmops-do not delete: ""
+      run_as:
+        service_principal_name: 185a9339-00c5-4031-8e3c-26e203ab8a0f

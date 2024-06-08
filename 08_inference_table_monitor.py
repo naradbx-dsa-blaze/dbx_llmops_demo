@@ -161,11 +161,9 @@ payloads = joined_df
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Compute the Input / Output text evaluation metrics (e.g., toxicity, perplexity, readability) 
+# MAGIC ### Compute the Input / Output text evaluation metrics (e.g., rouge) 
 # MAGIC
 # MAGIC Now that our input and output are unpacked and available as a string, we can compute their metrics. These will be analyzed by Lakehouse Monitoring so that we can understand how these metrics change over time.
-# MAGIC
-# MAGIC Feel free to add your own custom evaluation metrics here.
 
 # COMMAND ----------
 
@@ -210,47 +208,56 @@ payloads = payloads.drop("date", "status_code", "sampling_fraction", "client_req
 
 # COMMAND ----------
 
-#write processed payloads to delta table
-payloads.write.format("delta").mode("overwrite").saveAsTable("ang_nara_catalog.llmops.processed_payloads")
-
-# COMMAND ----------
-
-# Initialize the processed requests table. Turn on CDF (for monitoring) and enable special characters in column names. 
-def create_processed_table_if_not_exists(table_name, requests_with_metrics):
-    (DeltaTable.createIfNotExists(spark)
-        .tableName(table_name)
-        .addColumns(requests_with_metrics.schema)
-        .property("delta.enableChangeDataFeed", "true")
-        .property("delta.columnMapping.mode", "name") \
-        .property("delta.minReaderVersion", "2") \
-        .property("delta.minWriterVersion", "5")
-        .execute())
-
-# COMMAND ----------
-
-from delta.tables import DeltaTable
-
-#define checkpoint location for streaming
-checkpoint_location = "/Volumes/ang_nara_catalog/llmops/checkpoint"
-
-# Check whether the table exists before proceeding.
-DeltaTable.forName(spark, "ang_nara_catalog.llmops.processed_payloads")
-
-# Unpack the requests as a stream.
-requests_raw = spark.readStream.table("ang_nara_catalog.llmops.processed_payloads")
-
 # Compute text evaluation metrics.
-requests_with_metrics = compute_metrics(requests_raw)
+paylodas_with_metrics = compute_metrics(payloads)
 
-# Persist the requests stream, with a defined checkpoint path for this table.
-create_processed_table_if_not_exists(processed_table_name, requests_with_metrics)
+# COMMAND ----------
 
-(requests_with_metrics.writeStream
-                      .trigger(availableNow=True)
-                      .format("delta")
-                      .outputMode("append")
-                      .option("checkpointLocation", checkpoint_location)
-                      .toTable(processed_table_name).awaitTermination())
+#write processed payloads to delta table
+payloads_with_metrics.write\
+  .format("delta")\
+  .mode("overwrite")\
+  .option("delta.enableChangeDataFeed", "true")\
+  .saveAsTable(processed_table_name )
+
+# COMMAND ----------
+
+# # Initialize the processed requests table. Turn on CDF (for monitoring) and enable special characters in column names. 
+# def create_processed_table_if_not_exists(table_name, requests_with_metrics):
+#     (DeltaTable.createIfNotExists(spark)
+#         .tableName(table_name)
+#         .addColumns(requests_with_metrics.schema)
+#         .property("delta.enableChangeDataFeed", "true")
+#         .property("delta.columnMapping.mode", "name") \
+#         .property("delta.minReaderVersion", "2") \
+#         .property("delta.minWriterVersion", "5")
+#         .execute())
+
+# COMMAND ----------
+
+# from delta.tables import DeltaTable
+
+# #define checkpoint location for streaming
+# checkpoint_location = "/Volumes/ang_nara_catalog/llmops/checkpoint"
+
+# # Check whether the table exists before proceeding.
+# DeltaTable.forName(spark, "ang_nara_catalog.llmops.processed_payloads")
+
+# # Unpack the requests as a stream.
+# requests_raw = spark.readStream.table("ang_nara_catalog.llmops.processed_payloads")
+
+# # Compute text evaluation metrics.
+# requests_with_metrics = compute_metrics(requests_raw)
+
+# # Persist the requests stream, with a defined checkpoint path for this table.
+# create_processed_table_if_not_exists(processed_table_name, requests_with_metrics)
+
+# (requests_with_metrics.writeStream
+#                       .trigger(availableNow=True)
+#                       .format("delta")
+#                       .outputMode("append")
+#                       .option("checkpointLocation", checkpoint_location)
+#                       .toTable(processed_table_name).awaitTermination())
 
 # COMMAND ----------
 
