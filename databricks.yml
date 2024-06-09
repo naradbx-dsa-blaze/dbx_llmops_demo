@@ -1,7 +1,11 @@
+bundle:
+  name: llmops_summarization_bundle
+workspace:
+  host: https://e2-demo-field-eng.cloud.databricks.com/
 resources:
   jobs:
-    dev_clinical_summarization_pipeline:
-      name: "[dev]clinical_summarization_pipeline"
+    clinical_summarization_pipeline:
+      name: "clinical_summarization_pipeline"
       description: LLMOps pipeline for text summarization
       trigger:
         pause_status: PAUSED
@@ -36,16 +40,18 @@ resources:
           job_cluster_key: 02_finetuning_cluster
         - task_key: 05_create_serving_endpoint
           depends_on:
-            - task_key: 03_merge_model_weights
+            - task_key: 04_mlflow_logging
           notebook_task:
             notebook_path: 05_create_serving_endpoint
             source: GIT
+          job_cluster_key: 02_finetuning_cluster
         - task_key: 06_check_endpoint_status
           depends_on:
             - task_key: 05_create_serving_endpoint
           notebook_task:
             notebook_path: 06_check_endpoint_status
             source: GIT
+          job_cluster_key: 02_finetuning_cluster
         - task_key: if_READY
           depends_on:
             - task_key: 06_check_endpoint_status
@@ -61,19 +67,19 @@ resources:
             notebook_path: 07_query_endpoint
             source: GIT
           job_cluster_key: 02_finetuning_cluster
+        - task_key: 08_inference_table_monitor
+          depends_on:
+            - task_key: 07_query_endpoint
+          notebook_task:
+            notebook_path: 08_inference_table_monitor
+            source: GIT
+          job_cluster_key: 02_finetuning_cluster
         - task_key: 08_retry_endpoint
           depends_on:
             - task_key: if_READY
               outcome: "false"
           notebook_task:
             notebook_path: 06_check_endpoint_status
-            source: GIT
-          job_cluster_key: 02_finetuning_cluster
-        - task_key: 08_monitor_inference_table
-          depends_on:
-            - task_key: 07_query_endpoint
-          notebook_task:
-            notebook_path: 08_monitor_inference_table
             source: GIT
           job_cluster_key: 02_finetuning_cluster
       job_clusters:
@@ -94,10 +100,16 @@ resources:
               min_workers: 2
               max_workers: 8
       git_source:
-        git_url: https://github.com/naradbx-dsa-blaze/dbx_llmops-workshop
+        git_url: https://github.com/naradbx-dsa-blaze/dbx_llmops_demo
         git_provider: gitHub
         git_branch: main
       tags:
         llmops-do not delete: ""
-      run_as:
-        service_principal_name: 185a9339-00c5-4031-8e3c-26e203ab8a0f
+
+environments:
+  development:
+    default: true
+
+  production: # This environment is when deploying test runs from a pull request on GitHub.
+    workspace:
+      host: https://e2-demo-field-eng.cloud.databricks.com/      
