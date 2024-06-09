@@ -1,0 +1,7 @@
+{
+  "host": "https://e2-demo-field-eng.cloud.databricks.com/",
+  "authType": "databricks-cli",
+  "databricksPath": "/Users/narasimha.kamathardi/.vscode/extensions/databricks.databricks-1.1.5-darwin-arm64/bin/databricks",
+  "clusterId": "0601-182128-dcbte59m",
+  "workspacePath": "/Users/narasimha.kamathardi@databricks.com/.ide/dbx_llmops_demo-2-4a9ec079"
+}
