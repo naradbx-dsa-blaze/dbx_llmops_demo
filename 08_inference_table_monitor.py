@@ -234,8 +234,7 @@ checkpoint_location = "/Volumes/ang_nara_catalog/llmops/checkpoint"
 DeltaTable.forName(spark, "ang_nara_catalog.llmops.processed_payloads")
 
 # Unpack the requests as a stream.
-requests_raw = spark.readStream.table("ang_nara_catalog.llmops.processed_payloads").option("skipChangeCommits", "true")
-
+requests_raw = spark.readStream.option("skipChangeCommits", "true").table("ang_nara_catalog.llmops.processed_payloads")
 # Compute text evaluation metrics.
 requests_with_metrics = compute_metrics(requests_raw)
 
