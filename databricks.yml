@@ -74,7 +74,7 @@ resources:
             notebook_path: 08_inference_table_monitor
             source: GIT
           job_cluster_key: 02_finetuning_cluster
-        - task_key: 08_retry_endpoint
+        - task_key: 09_retry_endpoint
           depends_on:
             - task_key: if_READY
               outcome: "false"
