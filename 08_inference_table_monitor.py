@@ -214,14 +214,14 @@ payloads.write.format("delta").mode("overwrite").saveAsTable("ang_nara_catalog.l
 
 # Initialize the processed requests table. Turn on CDF (for monitoring) and enable special characters in column names. 
 def create_processed_table_if_not_exists(table_name, requests_with_metrics):
-    (DeltaTable.createIfNotExists(spark)
-        .tableName(table_name)
-        .addColumns(requests_with_metrics.schema)
-        .property("delta.enableChangeDataFeed", "true")
+    DeltaTable.createIfNotExists(spark) \
+        .tableName(table_name) \
+        .addColumns(requests_with_metrics.schema) \
+        .property("delta.enableChangeDataFeed", "true") \
         .property("delta.columnMapping.mode", "name") \
         .property("delta.minReaderVersion", "2") \
-        .property("delta.minWriterVersion", "5")
-        .execute())
+        .property("delta.minWriterVersion", "5") \
+        .execute()
 
 # COMMAND ----------
 
@@ -234,7 +234,7 @@ checkpoint_location = "/Volumes/ang_nara_catalog/llmops/checkpoint"
 DeltaTable.forName(spark, "ang_nara_catalog.llmops.processed_payloads")
 
 # Unpack the requests as a stream.
-requests_raw = spark.readStream.table("ang_nara_catalog.llmops.processed_payloads")
+requests_raw = spark.readStream.table("ang_nara_catalog.llmops.processed_payloads").option("skipChangeCommits", "true")
 
 # Compute text evaluation metrics.
 requests_with_metrics = compute_metrics(requests_raw)
