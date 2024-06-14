@@ -5,7 +5,7 @@ workspace:
 resources:
   jobs:
     clinical_summarization_pipeline:
-      name: "clinical_summarization_pipeline"
+      name: "[${bundle.environment}] clinical_summarization_pipeline"
       description: LLMOps pipeline for text summarization
       trigger:
         pause_status: PAUSED
