@@ -281,7 +281,7 @@ monitor_params = {
     "slicing_exprs": SLICING_EXPRS,
     "custom_metrics": [
         lm.Metric(
-            name="metric_name",
+            name="avg_rouge",
             definition="avg(`{{input_column}}`)",
             type="aggregate",
             input_columns=["rouge_score"],
