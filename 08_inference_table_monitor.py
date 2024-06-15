@@ -262,20 +262,25 @@ Optional parameters to control monitoring analysis. For help, use the command he
 GRANULARITIES = ["1 day"]                        # Window sizes to analyze data over
 SLICING_EXPRS = None                             # Expressions to slice data with
 
-CUSTOM_METRICS = {
-  "name": "avg_rouge",
-  "definition": "avg(`{{input_column}}`)",
-  "output_data_type": {
-    "metadata": {},
-    "name": "output",
-    "nullable": True,
-    "type": "double"
-  },
-  "type": "CUSTOM_METRIC_TYPE_AGGREGATE",
-  "input_columns": [
-    "rouge_score"
-  ]
-}         # A list of custom metrics to compute
+CUSTOM_METRICS = [                               # A list of custom metrics to compute
+    {
+        "name": "avg_rouge",
+        "definition": "avg(`{{input_column}}`)",
+        "output_data_type": {
+            "metadata": {},
+            "name": "output",
+            "nullable": True,
+            "type": "double"
+        },
+        "type": "CUSTOM_METRIC_TYPE_AGGREGATE",
+        "input_columns": [
+            {
+                "name": "rouge_score",
+                "type": "double"
+            }
+        ]
+    }
+]      
 BASELINE_TABLE = None                            # Baseline table name, if any, for computing baseline drift
 
 # COMMAND ----------
