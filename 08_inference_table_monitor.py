@@ -153,11 +153,6 @@ payloads = joined_df
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC
-
-# COMMAND ----------
-
-# MAGIC %md
 # MAGIC ### Compute the Input / Output text evaluation metrics (e.g., toxicity, perplexity, readability) 
 # MAGIC
 # MAGIC Now that our input and output are unpacked and available as a string, we can compute their metrics. These will be analyzed by Lakehouse Monitoring so that we can understand how these metrics change over time.
@@ -226,27 +221,37 @@ def create_processed_table_if_not_exists(table_name, requests_with_metrics):
 # COMMAND ----------
 
 from delta.tables import DeltaTable
+import shutil
 
 #define checkpoint location for streaming
 checkpoint_location = "/Volumes/ang_nara_catalog/llmops/checkpoint"
 
-# Check whether the table exists before proceeding.
-DeltaTable.forName(spark, "ang_nara_catalog.llmops.processed_payloads")
+#Check whether the table exists before proceeding.
+DeltaTable.isDeltaTable(spark, "ang_nara_catalog.llmops.processed_payloads")
+#Unpack the requests as a stream.
+requests_raw = spark.readStream.table("ang_nara_catalog.llmops.processed_payloads")
 
-# Unpack the requests as a stream.
-requests_raw = spark.readStream.option("skipChangeCommits", "true").table("ang_nara_catalog.llmops.processed_payloads")
-# Compute text evaluation metrics.
+#Compute text evaluation metrics.
 requests_with_metrics = compute_metrics(requests_raw)
 
-# Persist the requests stream, with a defined checkpoint path for this table.
+#Persist the requests stream, with a defined checkpoint path for this table.
 create_processed_table_if_not_exists(processed_table_name, requests_with_metrics)
 
-(requests_with_metrics.writeStream
-                      .trigger(availableNow=True)
-                      .format("delta")
-                      .outputMode("append")
-                      .option("checkpointLocation", checkpoint_location)
-                      .toTable(processed_table_name).awaitTermination())
+#Delete the existing checkpoint directory
+dbutils.fs.rm(checkpoint_location, True)
+print(f"Deleted old checkpoint location: {checkpoint_location}")
+
+#Create a new checkpoint location as a volume
+dbutils.fs.mkdirs(checkpoint_location)
+print(f"Created new checkpoint location: {checkpoint_location}")
+
+#Write the streaming DataFrame to Delta table using foreachBatch
+requests_with_metrics.writeStream \
+    .trigger(processingTime="10 seconds") \
+    .foreachBatch(lambda batch_df, batch_id: batch_df.write.format("delta").mode("append").saveAsTable(processed_table_name)) \
+    .option("checkpointLocation", checkpoint_location) \
+    .start() \
+    .awaitTermination(1800)
 
 # COMMAND ----------
 
@@ -262,7 +267,6 @@ BASELINE_TABLE = None                            # Baseline table name, if any, 
 # COMMAND ----------
 
 import databricks.lakehouse_monitoring as lm
-
 
 monitor_params = {
     "profile_type": lm.TimeSeries(
