@@ -256,34 +256,18 @@ requests_with_metrics.writeStream \
 
 # COMMAND ----------
 
+from databricks.sdk.service.catalog import MonitorMetric, MonitorMetricType
+from pyspark.sql import types as T
 """
 Optional parameters to control monitoring analysis. For help, use the command help(lm.create_monitor).
 """
 GRANULARITIES = ["1 day"]                        # Window sizes to analyze data over
 SLICING_EXPRS = None                             # Expressions to slice data with
-
-CUSTOM_METRICS = [                               # A list of custom metrics to compute
-    {
-        "name": "avg_rouge",
-        "definition": "avg(`{{input_column}}`)",
-        "output_data_type": {
-            "metadata": {},
-            "name": "output",
-            "nullable": True,
-            "type": "double"
-        },
-        "type": "CUSTOM_METRIC_TYPE_AGGREGATE",
-        "input_columns": [
-            {
-                "name": "rouge_score",
-                "type": "double"
-            }
-        ]
-    }
-]      
 BASELINE_TABLE = None                            # Baseline table name, if any, for computing baseline drift
 
 # COMMAND ----------
+
+from pyspark.sql.types import DoubleType
 
 import databricks.lakehouse_monitoring as lm
 
@@ -296,7 +280,15 @@ monitor_params = {
     "schedule": None,  # We will refresh the metrics on-demand in this notebook
     "baseline_table_name": BASELINE_TABLE,
     "slicing_exprs": SLICING_EXPRS,
-    "custom_metrics": CUSTOM_METRICS,
+    "custom_metrics": [
+        lm.Metric(
+            name="metric_name",
+            definition="avg(`{{input_column}}`)",
+            type="aggregate",
+            input_columns=["rouge_score"],
+            output_data_type=DoubleType()
+        )
+    ]
 }
 
 try:
