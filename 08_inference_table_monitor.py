@@ -47,7 +47,7 @@ print(f"Processed requests with text evaluation metrics will be saved to: {proce
 
 payloads = spark.table(payload_table_name)
 
-while payloads.count() <= 1:
+while payloads.count() < 1:
     print("Waiting for more payloads to be logged...")
     time.sleep(30)  # Adjust the sleep duration as needed
     payloads = spark.table(payload_table_name)
@@ -228,7 +228,8 @@ checkpoint_location = "/Volumes/ang_nara_catalog/llmops/checkpoint"
 
 #Check whether the table exists before proceeding.
 DeltaTable.isDeltaTable(spark, "ang_nara_catalog.llmops.processed_payloads")
-#Unpack the requests as a stream.
+
+#read processed payloads table
 requests_raw = spark.readStream.table("ang_nara_catalog.llmops.processed_payloads")
 
 #Compute text evaluation metrics.
@@ -248,10 +249,10 @@ print(f"Created new checkpoint location: {checkpoint_location}")
 #Write the streaming DataFrame to Delta table using foreachBatch
 requests_with_metrics.writeStream \
     .trigger(processingTime="10 seconds") \
-    .foreachBatch(lambda batch_df, batch_id: batch_df.dropDuplicates().write.format("delta").mode("append").saveAsTable(processed_table_name)) \
+    .foreachBatch(lambda batch_df, batch_id: batch_df.write.format("delta").mode("append").saveAsTable(processed_table_name)) \
     .option("checkpointLocation", checkpoint_location) \
     .start() \
-    .awaitTermination(500)
+    .awaitTermination(100)
 
 # COMMAND ----------
 
@@ -261,7 +262,20 @@ Optional parameters to control monitoring analysis. For help, use the command he
 GRANULARITIES = ["1 day"]                        # Window sizes to analyze data over
 SLICING_EXPRS = None                             # Expressions to slice data with
 
-CUSTOM_METRICS = None                            # A list of custom metrics to compute
+CUSTOM_METRICS = {
+  "name": "avg_rouge",
+  "definition": "avg(`{{input_column}}`)",
+  "output_data_type": {
+    "metadata": {},
+    "name": "output",
+    "nullable": True,
+    "type": "double"
+  },
+  "type": "CUSTOM_METRIC_TYPE_AGGREGATE",
+  "input_columns": [
+    "rouge_score"
+  ]
+}         # A list of custom metrics to compute
 BASELINE_TABLE = None                            # Baseline table name, if any, for computing baseline drift
 
 # COMMAND ----------
