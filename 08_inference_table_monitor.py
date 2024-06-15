@@ -256,7 +256,6 @@ requests_with_metrics.writeStream \
 
 # COMMAND ----------
 
-from databricks.sdk.service.catalog import MonitorMetric, MonitorMetricType
 from pyspark.sql import types as T
 """
 Optional parameters to control monitoring analysis. For help, use the command help(lm.create_monitor).
