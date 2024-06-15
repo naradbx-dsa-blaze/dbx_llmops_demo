@@ -248,10 +248,10 @@ print(f"Created new checkpoint location: {checkpoint_location}")
 #Write the streaming DataFrame to Delta table using foreachBatch
 requests_with_metrics.writeStream \
     .trigger(processingTime="10 seconds") \
-    .foreachBatch(lambda batch_df, batch_id: batch_df.write.format("delta").mode("append").saveAsTable(processed_table_name)) \
+    .foreachBatch(lambda batch_df, batch_id: batch_df.dropDuplicates().write.format("delta").mode("append").saveAsTable(processed_table_name)) \
     .option("checkpointLocation", checkpoint_location) \
     .start() \
-    .awaitTermination(1800)
+    .awaitTermination(500)
 
 # COMMAND ----------
 
