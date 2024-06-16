@@ -252,7 +252,7 @@ requests_with_metrics.writeStream \
     .foreachBatch(lambda batch_df, batch_id: batch_df.write.format("delta").mode("append").saveAsTable(processed_table_name)) \
     .option("checkpointLocation", checkpoint_location) \
     .start() \
-    .awaitTermination(100)
+    .awaitTermination(30)
 
 # COMMAND ----------
 
