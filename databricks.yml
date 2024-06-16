@@ -4,8 +4,8 @@ workspace:
   host: https://e2-demo-field-eng.cloud.databricks.com/
 resources:
   jobs:
-    clinical_summarization_pipeline:
-      name: "[${bundle.environment}] clinical_summarization_pipeline"
+    llmops_finetuning_template:
+      name: "[development] llmops_finetuning_template"
       description: LLMOps pipeline for text summarization
       trigger:
         pause_status: PAUSED
@@ -74,6 +74,36 @@ resources:
             notebook_path: 08_inference_table_monitor
             source: GIT
           job_cluster_key: 02_finetuning_cluster
+        - task_key: 09_avg_rouge_calc
+          depends_on:
+            - task_key: 08_inference_table_monitor
+          notebook_task:
+            notebook_path: 09_avg_rouge_calc
+            source: GIT
+          job_cluster_key: 02_finetuning_cluster
+        - task_key: baseline_comparison
+          depends_on:
+            - task_key: 09_avg_rouge_calc
+          condition_task:
+            op: GREATER_THAN
+            left: "{{tasks.09_avg_rouge_calc.values.rouge}}"
+            right: "0.2"
+        - task_key: 10_copy_to_prod_catalog
+          depends_on:
+            - task_key: baseline_comparison
+              outcome: "true"
+          notebook_task:
+            notebook_path: 10_copy_to_prod_catalog
+            source: GIT
+          job_cluster_key: 02_finetuning_cluster
+        - task_key: 11_model_reatraining
+          depends_on:
+            - task_key: baseline_comparison
+              outcome: "false"
+          notebook_task:
+            notebook_path: 11_model_retraining
+            source: GIT
+          job_cluster_key: 02_finetuning_cluster
         - task_key: 09_retry_endpoint
           depends_on:
             - task_key: if_READY
@@ -105,11 +135,9 @@ resources:
         git_branch: main
       tags:
         llmops-do not delete: ""
-
-environments:
-  development:
-    default: true
-
-  production: # This environment is when deploying test runs from a pull request on GitHub.
-    workspace:
-      host: https://e2-demo-field-eng.cloud.databricks.com/      
+      queue:
+        enabled: true
+      edit_mode: EDITABLE
+      deployment:
+        kind: BUNDLE
+        metadata_file_path: /Users/narasimha.kamathardi@databricks.com/.bundle/llmops_summarization_bundle/development/state/metadata.json
