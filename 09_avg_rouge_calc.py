@@ -3,12 +3,12 @@ df = spark.read.table("ang_nara_catalog.llmops.ft_mistral7b_endpoint_processed_p
 
 # COMMAND ----------
 
-#define baseline rouge
-baseline = 0.20
+# Wait for a week (7 days)
+print("Waiting for a week to calculate the average...")
+time.sleep(7 * 24 * 60 * 60)  # 7 days in seconds
 
 #compute average
 average = df.agg({"avg_rouge": "avg"}).collect()[0][0]
-
 
 # COMMAND ----------
 
