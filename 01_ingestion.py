@@ -38,7 +38,7 @@ format_data_udf = udf(format_data_udf, StringType())
 # COMMAND ----------
 
 @dlt.table
-def format_notes(note):
+def format_notes():
   df = dlt.read('load_data')
   df = df.withColumn("prompt", format_data_udf(df["note"]))
   df = df.withColumnRenamed("summary", "response")
