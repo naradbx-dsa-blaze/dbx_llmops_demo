@@ -62,5 +62,5 @@ def create_test_data():
   sorted_df = df.orderBy(col("patient_id").desc())
   last_10000_rows = sorted_df.limit(10000)
   df = df.drop("note")
-  last_10000_rows.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.test_clinical_data")    
-  return last_10000_rows
+  last_500_rows.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.test_clinical_data")    
+  return last_500_rows
