@@ -42,8 +42,8 @@ def format_notes():
   df = dlt.read('clean_data')
   df = df.withColumn("prompt", format_data_udf(df["note"]))
   df = df.withColumnRenamed("summary", "response")
-  train_df = df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.train_clinical_data") 
-  return train_df
+  df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.train_clinical_data") 
+  return df
 
 # COMMAND ----------
 
