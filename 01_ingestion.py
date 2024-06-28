@@ -31,7 +31,10 @@ def clean_data():
 
 # Define the function to format the text
 def format_data_udf(note):
-    return f"Summarize the patients medical history, including any relevant past illnesses, surgeries, or chronic conditions.\n\n###Instruction: {note}\n\n###Response:"
+    return f"Summarize the patients medical history, including any relevant past illnesses, surgeries, or chronic conditions.
+            ###Instruction: 
+            {note} 
+            ###Response: "
 # Register the function as a UDF
 format_data_udf = udf(format_data_udf, StringType())
 
@@ -42,8 +45,17 @@ def format_notes():
   df = dlt.read('clean_data')
   df = df.withColumn("prompt", format_data_udf(df["note"]))
   df = df.withColumnRenamed("summary", "response")
-  df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.train_clinical_data") 
   return df
+
+# COMMAND ----------
+
+@dlt.table
+def create_train_data():
+  df = dlt.read('format_notes')
+  df = df.limit(10000)
+  df = df.drop("note")
+  df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.train_clinical_data")   
+  return last_10000_rows
 
 # COMMAND ----------
 
