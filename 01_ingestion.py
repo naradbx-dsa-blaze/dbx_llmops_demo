@@ -31,10 +31,7 @@ def clean_data():
 
 # Define the function to format the text
 def format_data_udf(note):
-    return f"Summarize the patients medical history, including any relevant past illnesses, surgeries, or chronic conditions.
-            ###Instruction: 
-            {note} 
-            ###Response: "
+    return f"Summarize the patients medical history, including any relevant past illnesses, surgeries, or chronic conditions.\n###Instruction:{note}\n\n###Response:\n"
 # Register the function as a UDF
 format_data_udf = udf(format_data_udf, StringType())
 
