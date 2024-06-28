@@ -52,7 +52,7 @@ def create_train_data():
   df = df.limit(10000)
   df = df.drop("note")
   df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.train_clinical_data")   
-  return last_10000_rows
+  return df
 
 # COMMAND ----------
 
