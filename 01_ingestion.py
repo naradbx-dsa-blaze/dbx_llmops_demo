@@ -29,12 +29,20 @@ def clean_data():
 
 # COMMAND ----------
 
-@dlt.table
-def add_instruction():
-  df = dlt.read('clean_data')
-  df = df.withColumn("instruction", lit('Summarize the patients medical history, including any relevant past illnesses, surgeries, or chronic conditions')) 
-  df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.refined_clinical_data")    
-  return df
+# Define the function to format the text
+def format_data(note):
+    return f"Summarize the patients medical history, including any relevant past illnesses, surgeries, or chronic conditions.\n\n###Instruction: {note}\n\n###Response:"
+# Register the function as a UDF
+format_data_udf = udf(format_data, StringType())
+
+# COMMAND ----------
+
+def format_data(note):
+  df = dlt.read('load_data')
+  df = df.withColumn("prompt", format_data_udf(df["note"]))
+  df = df.withColumnRenamed("summary", "response")
+  train_df = df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.train_clinical_data") 
+  return train_df
 
 # COMMAND ----------
 
