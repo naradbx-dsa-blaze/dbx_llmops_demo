@@ -39,7 +39,7 @@ format_data_udf = udf(format_data_udf, StringType())
 
 @dlt.table
 def format_notes():
-  df = dlt.read('load_data')
+  df = dlt.read('clean_data')
   df = df.withColumn("prompt", format_data_udf(df["note"]))
   df = df.withColumnRenamed("summary", "response")
   train_df = df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.train_clinical_data") 
@@ -49,7 +49,7 @@ def format_notes():
 
 @dlt.table
 def create_test_data():
-  df = dlt.read('add_instruction')
+  df = dlt.read('format_notes')
   sorted_df = df.orderBy(col("patient_id").desc())
   last_10000_rows = sorted_df.limit(10000)
   last_10000_rows.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.test_clinical_data")    
