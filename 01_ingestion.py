@@ -30,14 +30,15 @@ def clean_data():
 # COMMAND ----------
 
 # Define the function to format the text
-def format_data(note):
+def format_data_udf(note):
     return f"Summarize the patients medical history, including any relevant past illnesses, surgeries, or chronic conditions.\n\n###Instruction: {note}\n\n###Response:"
 # Register the function as a UDF
-format_data_udf = udf(format_data, StringType())
+format_data_udf = udf(format_data_udf, StringType())
 
 # COMMAND ----------
 
-def format_data(note):
+@dlt.table
+def format_notes(note):
   df = dlt.read('load_data')
   df = df.withColumn("prompt", format_data_udf(df["note"]))
   df = df.withColumnRenamed("summary", "response")
