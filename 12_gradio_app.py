@@ -21,7 +21,7 @@ class MedicalHistorySummarizer:
         # Define input for the model
         input_data = {"prompt": prompt, "client_request_id": client_request_id}
         # Make prediction
-        response = self.deploy_client.predict(endpoint="ft_mistral7b_endpoint", inputs=input_data)
+        response = self.deploy_client.predict(endpoint="ift-medbrief8b-endpoint ", inputs=input_data)
         # Extract and return the response
         get_text = response['choices'][0]['text']
         summary = self.filter_incomplete_sentence(get_text)
