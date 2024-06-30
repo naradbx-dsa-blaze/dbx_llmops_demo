@@ -50,8 +50,7 @@ def format_notes():
 def create_train_data():
   df = dlt.read('format_notes')
   df = df.limit(2000)
-  output_path = "/Volumes/ang_nara_catalog/llmops/data/train.jsonl"
-  df.write.json(output_path, mode="overwrite", lineSep="\n")
+  df=df.drop("note", "patient_id")
   df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.train_clinical_data")  
   return df
 
@@ -62,8 +61,6 @@ def create_test_data():
   df = dlt.read('format_notes')
   sorted_df = df.orderBy(col("patient_id").desc())
   last_500_rows = sorted_df.limit(500)
-  last_500_rows = last_500_rows.drop("note")
-  output_path = "/Volumes/ang_nara_catalog/llmops/data/test.jsonl"
-  last_500_rows.write.json(output_path, mode="overwrite", lineSep="\n")
+  last_500_rows = last_500_rows.drop("note", "patient_id")
   last_500_rows.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.test_clinical_data")    
   return last_500_rows
