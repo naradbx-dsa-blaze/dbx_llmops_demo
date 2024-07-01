@@ -49,7 +49,7 @@ def format_notes():
 @dlt.table
 def create_train_data():
   df = dlt.read('format_notes')
-  df = df.limit(10000)
+  df = df.limit(15000)
   df=df.drop("note", "patient_id")
   df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.train_clinical_data")  
   return df
@@ -60,7 +60,7 @@ def create_train_data():
 def create_test_data():
   df = dlt.read('format_notes')
   sorted_df = df.orderBy(col("patient_id").desc())
-  last_500_rows = sorted_df.limit(500)
-  last_500_rows = last_500_rows.drop("note", "patient_id")
-  last_500_rows.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.test_clinical_data")    
-  return last_500_rows
+  last_5000_rows = sorted_df.limit(5000)
+  last_5000_rows = last_5000_rows.drop("note", "patient_id")
+  last_5000_rows.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.test_clinical_data")    
+  return last_5000_rows

@@ -23,7 +23,7 @@ run = fm.create(
     train_data_path="ang_nara_catalog.llmops.create_train_data",
     task_type="INSTRUCTION_FINETUNE",  # Change task_type="INSTRUCTION_FINETUNE" if you are using the fine-tuning API for completion.
     register_to=registered_model_name,
-    training_duration="5ep", #only 5 epoch to accelerate the demo. Check the mlflow experiment metrics to see if you should increase this number
+    training_duration="20ep", #only 20 epoch to accelerate the demo. Check the mlflow experiment metrics to see if you should increase this number
     learning_rate="5e-7",
 )
 
