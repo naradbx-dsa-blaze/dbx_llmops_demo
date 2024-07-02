@@ -1,19 +1,28 @@
 # Databricks notebook source
-df = spark.read.table("ang_nara_catalog.llmops.ft_mistral7b_endpoint_processed_profile_metrics")
+df = spark.read.table("ang_nara_catalog.llmops.`ift-medbrief8b-endpoint_processed_profile_metrics`")
 
 # COMMAND ----------
 
-# Wait for a week (7 days)
-print("Waiting for a week to calculate the average...")
-time.sleep(7 * 24 * 60 * 60)  # 7 days in seconds
+import time
+# Function to compute the ROUGE average
+def compute_rouge_average(df):
+    average = df.agg({"avg_rouge": "avg"}).collect()[0][0]
+    return average
 
-#compute average
-average = df.agg({"avg_rouge": "avg"}).collect()[0][0]
+# Compute the initial ROUGE average
+rouge_average = compute_rouge_average(df)
+print(f"Initial ROUGE Average: {rouge_average}")
+
+# Loop to update the average every 2 days
+while True:
+    time.sleep(2 * 24 * 60 * 60)  # Wait for 2 days
+    rouge_average = compute_rouge_average(df)
+    print(f"Updated ROUGE Average: {rouge_average}")
 
 # COMMAND ----------
 
-dbutils.jobs.taskValues.set(key = "rouge", value = average)
+dbutils.jobs.taskValues.set(key = "rouge", value = rouge_average)
 
 # COMMAND ----------
 
-dbutils.jobs.taskValues.get(taskKey="09_avg_rouge_calc", key="rouge", default=average, debugValue=average)
+dbutils.jobs.taskValues.get(taskKey="09_avg_rouge_calc", key="rouge", default=rouge_average, debugValue=rouge_average)
