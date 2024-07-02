@@ -127,7 +127,7 @@ from pyspark.sql.window import Window
 
 #add client_request_id column to the test table
 test_df = spark.read.table("ang_nara_catalog.llmops.create_test_data")
-test_df = test_df.withColumnRenamed("summary", "ground_truth")
+test_df = test_df.withColumnRenamed("response", "ground_truth")
 windowSpec = Window.orderBy(lit(1))
 test_df = test_df.withColumn("client_request_id", F.row_number().over(windowSpec))
 
@@ -185,7 +185,7 @@ def compute_metrics(requests_df: DataFrame, column_to_measure = ["request", "res
 
 # COMMAND ----------
 
-payloads = payloads.drop("date", "status_code", "sampling_fraction", "client_request_id", "databricks_request_id", "note", "request_metadata", "instruction")
+payloads = payloads.drop("date", "status_code", "sampling_fraction", "client_request_id", "databricks_request_id", "note", "request_metadata", "instruction", "prompt")
 
 # COMMAND ----------
 
