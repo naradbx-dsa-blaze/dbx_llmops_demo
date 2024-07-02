@@ -4,8 +4,8 @@ workspace:
   host: https://e2-demo-field-eng.cloud.databricks.com/
 resources:
   jobs:
-    llmops_finetuning_template:
-      name: "[development] llmops_finetuning_template"
+    development_clinical_summarization_pipeline:
+      name: "[development] clinical_summarization_pipeline"
       description: LLMOps pipeline for text summarization
       trigger:
         pause_status: PAUSED
@@ -24,87 +24,73 @@ resources:
             notebook_path: 02_finetuning
             source: GIT
           job_cluster_key: 02_finetuning_cluster
-        - task_key: 03_merge_model_weights
+        - task_key: 03_create_serving_endpoint
           depends_on:
             - task_key: 02_finetuning
           notebook_task:
-            notebook_path: 03_merge_weights
+            notebook_path: 03_create_serving_endpoint
             source: GIT
           job_cluster_key: 02_finetuning_cluster
-        - task_key: 04_mlflow_logging
+        - task_key: 04_check_endpoint_status
           depends_on:
-            - task_key: 03_merge_model_weights
+            - task_key: 03_create_serving_endpoint
           notebook_task:
-            notebook_path: 04_mlflow_logging
-            source: GIT
-          job_cluster_key: 02_finetuning_cluster
-        - task_key: 05_create_serving_endpoint
-          depends_on:
-            - task_key: 04_mlflow_logging
-          notebook_task:
-            notebook_path: 05_create_serving_endpoint
-            source: GIT
-          job_cluster_key: 02_finetuning_cluster
-        - task_key: 06_check_endpoint_status
-          depends_on:
-            - task_key: 05_create_serving_endpoint
-          notebook_task:
-            notebook_path: 06_check_endpoint_status
+            notebook_path: 04_check_endpoint_status
             source: GIT
           job_cluster_key: 02_finetuning_cluster
         - task_key: if_READY
           depends_on:
-            - task_key: 06_check_endpoint_status
+            - task_key: 04_check_endpoint_status
           condition_task:
             op: EQUAL_TO
-            left: "{{tasks.06_check_endpoint_status.values.status}}"
+            left: "{{tasks.04_check_endpoint_status.values.status}}"
             right: "1"
-        - task_key: 07_query_endpoint
+        - task_key: 05_query_endpoint
           depends_on:
             - task_key: if_READY
               outcome: "true"
           notebook_task:
-            notebook_path: 07_query_endpoint
+            notebook_path: 05_query_endpoint
             source: GIT
           job_cluster_key: 02_finetuning_cluster
-        - task_key: 08_inference_table_monitor
+        - task_key: 07_inference_table_monitor
           depends_on:
-            - task_key: 07_query_endpoint
+            - task_key: 05_query_endpoint
           notebook_task:
-            notebook_path: 08_inference_table_monitor
+            notebook_path: 07_inference_table_monitor
             source: GIT
           job_cluster_key: 02_finetuning_cluster
-        - task_key: 09_avg_rouge_calc
+        - task_key: 08_avg_rouge_calc
           depends_on:
-            - task_key: 08_inference_table_monitor
+            - task_key: 07_inference_table_monitor
           notebook_task:
-            notebook_path: 09_avg_rouge_calc
+            notebook_path: 08_avg_rouge_calc
             source: GIT
           job_cluster_key: 02_finetuning_cluster
         - task_key: baseline_comparison
           depends_on:
-            - task_key: 09_avg_rouge_calc
+            - task_key: 08_avg_rouge_calc
           condition_task:
             op: GREATER_THAN
-            left: "{{tasks.09_avg_rouge_calc.values.rouge}}"
+            left: "{{tasks.08_avg_rouge_calc.values.rouge}}"
             right: "0.2"
-        - task_key: 10_copy_to_prod_catalog
+        - task_key: 09_copy_to_prod_catalog
           depends_on:
             - task_key: baseline_comparison
               outcome: "true"
           notebook_task:
-            notebook_path: 10_copy_to_prod_catalog
+            notebook_path: 09_copy_to_prod_catalog
             source: GIT
           job_cluster_key: 02_finetuning_cluster
-        - task_key: 11_model_reatraining
+        - task_key: 10_notify_model_retraining
           depends_on:
             - task_key: baseline_comparison
               outcome: "false"
           notebook_task:
-            notebook_path: 11_model_retraining
+            notebook_path: 10_notify_model_retraining
             source: GIT
           job_cluster_key: 02_finetuning_cluster
-        - task_key: 09_retry_endpoint
+        - task_key: 06_retry_endpoint
           depends_on:
             - task_key: if_READY
               outcome: "false"
