@@ -6,7 +6,7 @@
 # COMMAND ----------
 
 # Set endpoint name
-endpoint_name = "ft_mistral7b_endpoint"
+endpoint_name = "ift-medbrief8b-endpoint"
 
 # COMMAND ----------
 
@@ -119,19 +119,6 @@ payloads = payloads.filter(F.col("status_code") == "200")
 #flatten json payload
 payloads = payloads.withColumn("request", col("request").prompt)
 payloads = payloads.withColumn("response", col("response").choices[0].text)
-
-# COMMAND ----------
-
-#cleanup junk output off of inference table
-import re
-def filter_incomplete_sentence(text):
-    pattern = r"(?:[^.!?]+(?:[.!?](?=\s|$))+\s?)"
-    filtered_sentence = "".join(re.findall(pattern, text))
-    return filtered_sentence.strip()
-  
-filter_incomplete_sentence = udf(filter_incomplete_sentence)
-  
-payloads = payloads.withColumn("response", filter_incomplete_sentence(payloads["response"]))
 
 # COMMAND ----------
 
