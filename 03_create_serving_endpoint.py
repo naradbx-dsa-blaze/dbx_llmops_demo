@@ -3,10 +3,10 @@ import requests
 import json
 
 # Set the name of the MLflow endpoint
-endpoint_name = "ft_mistral7b_endpoint"
+endpoint_name = "ift-medbrief8b-endpoint"
 
 # Name of the registered MLflow model
-model_name = "ang_nara_catalog.llmops.medbrief-7b"
+model_name = "ang_nara_catalog.llmops.ift-medbrief8b"
 
 # Get the latest version of the MLflow model
 model_version = 2
@@ -49,7 +49,7 @@ else:
        "config":{
           "served_entities":[
              {
-                "name":"medbrief-7b-2",
+                "name":"ift-medbrief8b-2",
                 "entity_name": model_name,
                 "entity_version": str(model_version),
                 "workload_size":"Small",
@@ -64,9 +64,9 @@ else:
           "traffic_config":{
              "routes":[
                 {
-                   "served_model_name":"medbrief-7b-2",
+                   "served_model_name":"ift-medbrief8b-2",
                    "traffic_percentage":100,
-                   "served_entity_name":"medbrief-7b-2"
+                   "served_entity_name":"ift-medbrief8b-2"
                 }
              ]
           },
