@@ -52,6 +52,10 @@ else:
                 "name":"ift-medbrief8b-2",
                 "entity_name": model_name,
                 "entity_version": str(model_version),
+                "scale_to_zero_enabled": True,
+                "environment_vars":{
+                     "ENABLE_MLFLOW_TRACING": True
+               },
                 "workload_size":"Small",
                 "workload_type":"GPU_MEDIUM",
                 "optimization_config":{
