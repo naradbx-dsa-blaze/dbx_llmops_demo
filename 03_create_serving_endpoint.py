@@ -37,10 +37,10 @@ else:
     chunk_size = optimizable_info['throughput_chunk_size']
 
     # Minimum desired provisioned throughput
-    min_provisioned_throughput = 2 * chunk_size
+    min_provisioned_throughput = 0
 
     # Maximum desired provisioned throughput
-    max_provisioned_throughput = 3 * chunk_size
+    max_provisioned_throughput = 2 * chunk_size
 
     # Send the POST request to create the serving endpoint
     data = {
@@ -61,7 +61,7 @@ else:
                 "optimization_config":{
                    "llm_optimized":True
                 },
-                "min_provisioned_throughput": min_provisioned_throughput,
+                "min_provisioned_throughput": 0,
                 "max_provisioned_throughput": max_provisioned_throughput
              }
           ],
