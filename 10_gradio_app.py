@@ -6,60 +6,76 @@
 
 import gradio as gr
 import mlflow.deployments
-import re
+from delta import DeltaTable
+import pandas as pd
 
 class MedicalHistorySummarizer:
     def __init__(self):
         self.deploy_client = mlflow.deployments.get_deploy_client("databricks")
-        self.feedback_data = []
-
+        
     def summarize_medical_history(self, prompt, client_request_id):
-        # Define input for the model
         input_data = {"prompt": prompt, "client_request_id": client_request_id}
-        # Make prediction
         response = self.deploy_client.predict(endpoint="ift-medbrief8b-endpoint", inputs=input_data)
-        # Extract and return the response
         summary = response['choices'][0]['text']
         return summary
 
-    def record_feedback(self, summary, feedback):
-        # Record the feedback
-        self.feedback_data.append({"summary": summary, "feedback": feedback})
+    def save_feedback(self, client_request_id, summary, feedback):
+        feedback_data = pd.DataFrame({
+            "Client Request ID": [client_request_id],
+            "Summary": [summary],
+            "Feedback": [feedback]
+        })
+        feedback_data.to_csv("feedback_data.csv", index=False)
         return f"Feedback recorded: {feedback}"
 
-    def get_feedback_data(self):
-        # Return the feedback data as a DataFrame
-        return pd.DataFrame(self.feedback_data)
-
-# Create an instance of the summarizer
 summarizer = MedicalHistorySummarizer()
 
-# Define the input components
 input_text = gr.Textbox(lines=20, label="Enter the detailed notes here", placeholder="Paste clinical notes here...")
 client_request_id_input = gr.Textbox(label="Client Request ID", placeholder="Enter client request ID here")
+output_text = gr.Textbox(label="Summary", interactive=False)
+feedback_text = gr.Textbox(label="Feedback Status", interactive=False)
+submit_button = gr.Button("Submit")
+thumbs_up_button = gr.Button("👍")
+thumbs_down_button = gr.Button("👎")
 
-# Define the output component
-output_text = gr.Textbox(label="Summary")
-
-# Function to update the summary state and display it
-def update_summary(prompt, client_request_id):
+def summarize_and_prepare_feedback(prompt, client_request_id):
     summary = summarizer.summarize_medical_history(prompt, client_request_id)
-    return summary
+    return summary, client_request_id
 
-# Create Gradio interface
-interface = gr.Interface(
-    fn=update_summary,
-    inputs=[input_text, client_request_id_input],
-    outputs=output_text,
-    title="Clinical Notes Summarization"
-)
+def record_feedback(summary, client_request_id, feedback):
+    feedback_result = summarizer.save_feedback(client_request_id, summary, feedback)
+    return feedback_result
 
-# Add event handlers for the feedback buttons
-def thumbs_up(summary):
-    return summarizer.record_feedback(summary, "yes")
+title = "Clinical Text Summarization LLM Application"
 
-def thumbs_down(summary):
-    return summarizer.record_feedback(summary, "no")
+with gr.Blocks(title=title) as interface:
+    with gr.Column():
+        input_text.render()
+        client_request_id_input.render()  # Render client_request_id_input before submit button
+        submit_button.render()
 
-# Launch the Gradio app
+    summary_output = gr.Textbox(label="Summary", interactive=False)
+    with gr.Row():
+        thumbs_up_button.render()
+        thumbs_down_button.render()
+
+    feedback_text.render()
+
+    submit_button.click(
+        fn=summarize_and_prepare_feedback,
+        inputs=[input_text, client_request_id_input],
+        outputs=[summary_output, client_request_id_input]
+    )
+
+    thumbs_up_button.click(
+        fn=record_feedback,
+        inputs=[summary_output, client_request_id_input, gr.State("Looks quite right!")],
+        outputs=[feedback_text]
+    )
+    thumbs_down_button.click(
+        fn=record_feedback,
+        inputs=[summary_output, client_request_id_input, gr.State("Dosen't look quite right!")],
+        outputs=[feedback_text]
+    )
+
 interface.launch(share=True)
