@@ -8,24 +8,40 @@ import gradio as gr
 import mlflow.deployments
 from delta import DeltaTable
 import pandas as pd
+from pyspark.sql import SparkSession
 
 class MedicalHistorySummarizer:
     def __init__(self):
-        self.deploy_client = mlflow.deployments.get_deploy_client("databricks")
-        
+        try:
+            self.deploy_client = mlflow.deployments.get_deploy_client("databricks")
+            self.spark = SparkSession.builder.appName("DeltaTableFeedback").getOrCreate()
+            print("Initialization successful.")
+        except Exception as e:
+            print(f"Error during initialization: {e}")
+
     def summarize_medical_history(self, prompt, client_request_id):
-        input_data = {"prompt": prompt, "client_request_id": client_request_id}
-        response = self.deploy_client.predict(endpoint="ift-medbrief8b-endpoint", inputs=input_data)
-        summary = response['choices'][0]['text']
-        return summary
+        try:
+            input_data = {"prompt": prompt, "client_request_id": client_request_id}
+            response = self.deploy_client.predict(endpoint="ift-medbrief8b-endpoint", inputs=input_data)
+            summary = response['choices'][0]['text']
+            return summary
+        except Exception as e:
+            print(f"Error during summarization: {e}")
+            return "Error during summarization"
 
     def save_feedback(self, client_request_id, summary, feedback):
-        feedback_data = pd.DataFrame({
-            "Client Request ID": [client_request_id],
-            "Summary": [summary],
-            "Feedback": [feedback]
-        })
-        feedback_data.write.format("delta").mode("overwrite").saveAsTable("ang_nara_catalog.llmops.user_feedback")
+        try:
+            feedback_data = pd.DataFrame({
+                "Client Request ID": [client_request_id],
+                "Summary": [summary],
+                "Feedback": [feedback]
+            })
+            feedback_spark_df = self.spark.createDataFrame(feedback_data)
+            feedback_spark_df.write.format("delta").mode("overwrite").saveAsTable("ang_nara_catalog.llmops.user_feedback")
+            return "Feedback saved successfully"
+        except Exception as e:
+            print(f"Error saving feedback: {e}")
+            return "Error saving feedback"
 
 summarizer = MedicalHistorySummarizer()
 
@@ -68,12 +84,12 @@ with gr.Blocks(title=title) as interface:
 
     thumbs_up_button.click(
         fn=record_feedback,
-        inputs=[summary_output, client_request_id_input, gr.State("Looks quite right!")],
+        inputs=[summary_output, client_request_id_input, gr.State(value="Looks quite right!")],
         outputs=[feedback_text]
     )
     thumbs_down_button.click(
         fn=record_feedback,
-        inputs=[summary_output, client_request_id_input, gr.State("Dosen't look quite right!")],
+        inputs=[summary_output, client_request_id_input, gr.State(value="Doesn't look quite right!")],
         outputs=[feedback_text]
     )
 
