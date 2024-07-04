@@ -37,7 +37,7 @@ else:
     chunk_size = optimizable_info['throughput_chunk_size']
 
     # Minimum desired provisioned throughput
-    min_provisioned_throughput = 0
+    min_provisioned_throughput = chunk_size
 
     # Maximum desired provisioned throughput
     max_provisioned_throughput = 2 * chunk_size
@@ -52,7 +52,6 @@ else:
                 "name":"ift-medbrief8b-2",
                 "entity_name": model_name,
                 "entity_version": str(model_version),
-                "scale_to_zero_enabled": True,
                 "environment_vars":{
                      "ENABLE_MLFLOW_TRACING": True
                },

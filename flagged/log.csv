@@ -1,0 +1,36 @@
+Enter the detailed notes here,Client Request ID,Summary,flag,username,timestamp
+"Summarize the patients medical history, including any relevant past illnesses, surgeries, or chronic conditions.
+###Instruction:Discharge Summary:
+
+Patient Name: N/A
+Age: 38
+Gender: Female
+
+Admission Date: N/A
+Discharge Date: N/A
+
+Chief Complaint:
+Sudden onset left lower quadrant abdominal pain.
+
+History of Present Illness:
+A 38-year-old woman presented to the emergency department with sudden onset left lower quadrant abdominal pain five days after receiving the SARS-CoV-2 vaccine (Pfizer-BioNTech, New York, New York). She reported symptoms consistent with thyroid storm, including fever, tachycardia to 140 beats per minute, and gastrointestinal symptoms (Burch-Wartofsky score 55).
+
+Past Medical History:
+No personal or family history of thyroid or autoimmune disease.
+
+Diagnosis and Management:
+Thyroid function tests revealed suppressed thyrotropin (TSH) of <0.008 µIU/mL, elevated free thyroxine (fT4) of 108 pmol/L, and elevated total triiodothyronine (T3) of 10.3 nmol/L. Thyrotropin receptor antibody (TSHrAb), thyroid-stimulating immunoglobulin (TSI), and anti-thyroid peroxidase (TPO) levels were all elevated, and ultrasonography revealed a diffusely enlarged thyroid gland with heterogeneous echogenicity and increased vascularity consistent with Graves. The patient was treated with methimazole at a total daily dose of 60 mg titrated up to 80 mg along with propranolol 40 mg 3 times daily. After 2 months, fT4 decreased to 66 pmol/L, and after 3 months, it normalized to 23 pmol/L, while on methimazole, 80 mg daily in divided doses.
+
+Disposition:
+After a discussion of the risks and benefit of administering the second vaccine, the patient decided to postpone the dose. She reported improved energy level and denied recurrence of palpitations or abdominal pain.
+
+Follow-up Care:
+N/A
+
+Prognosis:
+Excellent.
+
+Signed:
+N/A.
+
+###Response:",1,,,,2024-07-04 03:08:42.781140

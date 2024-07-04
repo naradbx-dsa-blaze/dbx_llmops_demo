@@ -7,7 +7,6 @@
 import gradio as gr
 import mlflow.deployments
 import re
-import pandas as pd
 
 class MedicalHistorySummarizer:
     def __init__(self):
@@ -42,38 +41,25 @@ client_request_id_input = gr.Textbox(label="Client Request ID", placeholder="Ent
 # Define the output component
 output_text = gr.Textbox(label="Summary")
 
-# Define the feedback buttons
-thumbs_up = gr.Button("👍")
-thumbs_down = gr.Button("👎")
-
-# Define a hidden state to store the summary
-summary_state = gr.State()
-
 # Function to update the summary state and display it
 def update_summary(prompt, client_request_id):
     summary = summarizer.summarize_medical_history(prompt, client_request_id)
-    return summary, summary
+    return summary
 
 # Create Gradio interface
 interface = gr.Interface(
     fn=update_summary,
     inputs=[input_text, client_request_id_input],
-    outputs=[output_text, summary_state],
+    outputs=output_text,
     title="Clinical Notes Summarization"
 )
 
 # Add event handlers for the feedback buttons
-thumbs_up.click(
-    fn=lambda summary: summarizer.record_feedback(summary, "yes"),
-    inputs=[summary_state],
-    outputs=[output_text]
-)
+def thumbs_up(summary):
+    return summarizer.record_feedback(summary, "yes")
 
-thumbs_down.click(
-    fn=lambda summary: summarizer.record_feedback(summary, "no"),
-    inputs=[summary_state],
-    outputs=[output_text]
-)
+def thumbs_down(summary):
+    return summarizer.record_feedback(summary, "no")
 
 # Launch the Gradio app
 interface.launch(share=True)
