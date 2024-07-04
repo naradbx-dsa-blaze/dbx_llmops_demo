@@ -25,8 +25,7 @@ class MedicalHistorySummarizer:
             "Summary": [summary],
             "Feedback": [feedback]
         })
-        feedback_data.to_csv("feedback_data.csv", index=False)
-        return f"Feedback recorded: {feedback}"
+        feedback_data.write.format("delta").mode("overwrite").saveAsTable("ang_nara_catalog.llmops.user_feedback")
 
 summarizer = MedicalHistorySummarizer()
 
