@@ -60,7 +60,7 @@ else:
                 "optimization_config":{
                    "llm_optimized":True
                 },
-                "min_provisioned_throughput": 0,
+                "min_provisioned_throughput": min_provisioned_throughput,
                 "max_provisioned_throughput": max_provisioned_throughput
              }
           ],
