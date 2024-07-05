@@ -23,7 +23,7 @@ def load_data():
 def clean_data():
   df = dlt.read('load_data')
   df = df.filter(df.task == 'Summarization')
-  df = df.select('patient_id', 'note', 'answer')
+  df = df.select('patient_id', 'note', 'answer', 'question')
   df = df.withColumnRenamed("answer", "summary")
   return df
 
@@ -40,6 +40,7 @@ format_data_udf = udf(format_data_udf, StringType())
 @dlt.table
 def format_notes():
   df = dlt.read('clean_data')
+  df = df.drop('question')
   df = df.withColumn("prompt", format_data_udf(df["note"]))
   df = df.withColumnRenamed("summary", "response")
   return df
