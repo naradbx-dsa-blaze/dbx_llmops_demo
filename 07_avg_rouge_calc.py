@@ -19,7 +19,7 @@ table_name = "ang_nara_catalog.llmops.`ift-medbrief8b-endpoint_processed_profile
 # Wait until the table is created
 while not table_exists(spark, table_name):
     print(f"Waiting for the table {table_name} to be created...")
-    time.sleep(60)  # Check every 60 seconds
+    time.sleep(120)  # Check every 120 seconds
 
 print(f"Table {table_name} is now available.")
 
