@@ -1,0 +1,34 @@
+# This GitHub workflow deploys Bundle resources (ML resource config and more)
+# defined under dbx_llmops_demo/resources/*
+# and dbx_llmops_demo/databricks.yml with prod deployment target configs,
+# when PRs are merged into the release branch
+name: Bundle Deployment for dbx_llmops_demo Prod
+
+on:
+  push:
+    branches:
+      - 'release'
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: ./dbx_llmops_demo
+
+env:
+  DATABRICKS_TOKEN: ${{ secrets.PROD_WORKSPACE_TOKEN }}
+
+jobs:
+  prod:
+    concurrency: dbx_llmops_demo-prod-bundle-job
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: databricks/setup-cli@v0.221.0
+      - name: Validate Bundle For Prod
+        id: validate
+        run: |
+          databricks bundle validate -t nara_catalog
+      - name: Deploy Bundle to Prod
+        id: deploy
+        run: |
+          databricks bundle deploy -t nara_catalog
