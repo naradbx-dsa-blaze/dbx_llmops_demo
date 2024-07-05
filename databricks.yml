@@ -45,17 +45,20 @@ resources:
             op: EQUAL_TO
             left: "{{tasks.04_check_endpoint_status.values.status}}"
             right: "1"
-        - task_key: 05_query_endpoint
+        - task_key: 05_notify_endpoint_creation
           depends_on:
             - task_key: if_READY
               outcome: "true"
           notebook_task:
-            notebook_path: 05_query_endpoint
+            notebook_path: 05_notify_endpoint_creation
             source: GIT
           job_cluster_key: 02_finetuning_cluster
+          email_notifications:
+            on_success:
+              - narasimha.kamathardi@databricks.com
         - task_key: 07_inference_table_monitor
           depends_on:
-            - task_key: 05_query_endpoint
+            - task_key: 05_notify_endpoint_creation
           notebook_task:
             notebook_path: 07_inference_table_monitor
             source: GIT
