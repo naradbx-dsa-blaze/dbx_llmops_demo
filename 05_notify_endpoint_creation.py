@@ -1,2 +1,2 @@
 # Databricks notebook source
-print("Model ednpoint is ready!!")
+print("Model endpoint is ready!!")
