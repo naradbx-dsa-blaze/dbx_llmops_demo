@@ -146,9 +146,6 @@ joined_df = payloads.join(test_df, "client_request_id", "inner")
 # Load the feedback DataFrame
 feedback_df = spark.read.csv("/Volumes/ang_nara_catalog/llmops/data/feedback.csv", header=True, inferSchema=True)
 
-# Ensure feedback_df has the correct column for join and includes 'feedback' column
-feedback_df = feedback_df.withColumnRenamed("feedback_response", "feedback")
-
 # Join feedback table with the already joined DataFrame
 final_df = joined_df.join(feedback_df, "client_request_id", "inner")
 
