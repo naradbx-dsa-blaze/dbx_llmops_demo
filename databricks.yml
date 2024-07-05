@@ -1,11 +1,11 @@
 bundle:
-  name: llmops_summarization_bundle
+  name: clinical_notes_summarization
 workspace:
   host: https://e2-demo-field-eng.cloud.databricks.com/
 resources:
   jobs:
     development_clinical_summarization_pipeline:
-      name: "[development] clinical_summarization_pipeline"
+      name: "[${bundle.environment}]clinical_notes_summarization_pipeline"
       description: LLMOps pipeline for text summarization
       trigger:
         pause_status: PAUSED
@@ -130,3 +130,26 @@ resources:
       deployment:
         kind: BUNDLE
         metadata_file_path: /Users/narasimha.kamathardi@databricks.com/.bundle/llmops_summarization_bundle/development/state/metadata.json
+
+environments:
+  development:
+    default: true
+    resources:
+      pipelines:
+        clinical_notes_summarization_pipeline:
+          development: true
+
+  production:
+    workspace:
+      host: https://e2-demo-west.cloud.databricks.com/
+    resources:
+      pipelines:
+        clinical_notes_summarization_pipeline:
+          permissions:
+          - level: CAN_VIEW
+            group_name: users
+          development: false
+          clusters:
+            - autoscale:
+                min_workers: 2
+                max_workers: 8
