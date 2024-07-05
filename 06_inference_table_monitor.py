@@ -66,7 +66,7 @@ payloads = spark.table(payload_table_name)
 
 while payloads.count() < 1:
     print("Waiting for more payloads to be logged...")
-    time.sleep(30)  # Adjust the sleep duration as needed
+    time.sleep(120)  # Adjust the sleep duration as needed
     payloads = spark.table(payload_table_name)
 
 print("Payload count greater than 1. Continuing...")
@@ -220,39 +220,41 @@ def create_processed_table_if_not_exists(table_name, requests_with_metrics):
 
 # COMMAND ----------
 
-from delta.tables import DeltaTable
-import shutil
+# Initialize Spark session
+spark = SparkSession.builder.appName("StreamingApp").getOrCreate()
 
-#define checkpoint location for streaming
+# Define checkpoint location for streaming
 checkpoint_location = "/Volumes/ang_nara_catalog/llmops/checkpoint"
 
-#Check whether the table exists before proceeding.
-DeltaTable.isDeltaTable(spark, "ang_nara_catalog.llmops.processed_payloads")
+# Check whether the Delta table exists before proceeding
+table_exists = DeltaTable.isDeltaTable(spark, "ang_nara_catalog.llmops.processed_payloads")
 
-#read processed payloads table
-requests_raw = spark.readStream.table("ang_nara_catalog.llmops.processed_payloads")
+if table_exists:
+    # Read processed payloads table
+    requests_raw = spark.readStream.table("ang_nara_catalog.llmops.processed_payloads")
 
-#Compute text evaluation metrics.
-requests_with_metrics = compute_metrics(requests_raw)
+    # Compute text evaluation metrics (ensure this function is defined elsewhere in your code)
+    requests_with_metrics = compute_metrics(requests_raw)
 
-#Persist the requests stream, with a defined checkpoint path for this table.
-create_processed_table_if_not_exists(processed_table_name, requests_with_metrics)
+    # Delete the existing checkpoint directory if it exists
+    if dbutils.fs.exists(checkpoint_location):
+        dbutils.fs.rm(checkpoint_location, True)
+        print(f"Deleted old checkpoint location: {checkpoint_location}")
 
-#Delete the existing checkpoint directory
-dbutils.fs.rm(checkpoint_location, True)
-print(f"Deleted old checkpoint location: {checkpoint_location}")
+    # Create a new checkpoint location as a volume
+    dbutils.fs.mkdirs(checkpoint_location)
+    print(f"Created new checkpoint location: {checkpoint_location}")
 
-#Create a new checkpoint location as a volume
-dbutils.fs.mkdirs(checkpoint_location)
-print(f"Created new checkpoint location: {checkpoint_location}")
+    # Write the streaming DataFrame to Delta table using foreachBatch
+    stream = requests_with_metrics.writeStream \
+        .trigger(processingTime="10 seconds") \
+        .foreachBatch(lambda batch_df, batch_id: batch_df.write.format("delta").mode("append").saveAsTable("ang_nara_catalog.llmops.processed_payloads")) \
+        .option("checkpointLocation", checkpoint_location) \
+        .start()
 
-#Write the streaming DataFrame to Delta table using foreachBatch
-requests_with_metrics.writeStream \
-    .trigger(processingTime="10 seconds") \
-    .foreachBatch(lambda batch_df, batch_id: batch_df.write.format("delta").mode("append").saveAsTable(processed_table_name)) \
-    .option("checkpointLocation", checkpoint_location) \
-    .start() \
-    .awaitTermination(30)
+    stream.awaitTermination(30)
+else:
+    print("The Delta table 'ang_nara_catalog.llmops.processed_payloads' does not exist.")
 
 # COMMAND ----------
 
