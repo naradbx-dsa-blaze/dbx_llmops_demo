@@ -34,9 +34,9 @@ class MedicalHistorySummarizer:
         try:
             # Create a DataFrame to store the feedback
             feedback_data = pd.DataFrame({
-                "Client Request ID": [client_request_id],
-                "Summary": [summary],
-                "Feedback": [feedback]
+                "clint_request_id": [client_request_id],
+                "response": [summary],
+                "feedback": [feedback]
             })
             # Save the feedback to a CSV file
             feedback_data.to_csv("/Volumes/ang_nara_catalog/llmops/data/feedback_data.csv", index=False)
