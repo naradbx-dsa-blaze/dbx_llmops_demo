@@ -5,15 +5,32 @@
 
 # COMMAND ----------
 
+#import necessary libraries
+import requests
+from typing import Dict
+import time
+from pyspark.sql.types import StructType, StructField, StringType, ArrayType
+from pyspark.sql.functions import from_json, col
+from pyspark.sql import DataFrame, functions as F
+import json
+from pyspark.sql import SparkSession, functions as F
+from pyspark.sql.functions import row_number, lit
+from pyspark.sql.window import Window
+from pyspark.sql.functions import pandas_udf, PandasUDFType
+from pyspark.sql.types import DoubleType
+from rouge import Rouge
+import pandas as pd
+from delta.tables import DeltaTable
+import shutil
+from pyspark.sql import types as T
+import databricks.lakehouse_monitoring as lm
+
+# COMMAND ----------
+
 # Set endpoint name
 endpoint_name = "ift-medbrief8b-endpoint"
 
 # COMMAND ----------
-
-import requests
-from typing import Dict
-import time
-
 
 def get_endpoint_status(endpoint_name: str) -> Dict:
     # Fetch the PAT token to send in the API request
@@ -55,11 +72,6 @@ while payloads.count() < 1:
 print("Payload count greater than 1. Continuing...")
 
 # COMMAND ----------
-
-from pyspark.sql.types import StructType, StructField, StringType, ArrayType
-from pyspark.sql.functions import from_json, col
-from pyspark.sql import DataFrame, functions as F
-import json
 
 def convert_string_columns_to_json(df, string_columns):
     """
@@ -108,13 +120,10 @@ def convert_string_columns_to_json(df, string_columns):
 
 # COMMAND ----------
 
-string_columns = [
-  "request", "response"]
+string_columns = ["request", "response"]
 payloads = convert_string_columns_to_json(payloads, string_columns)
 # Filter out the non-successful requests.
 payloads = payloads.filter(F.col("status_code") == "200")
-
-# COMMAND ----------
 
 #flatten json payload
 payloads = payloads.withColumn("request", col("request").prompt)
@@ -122,36 +131,50 @@ payloads = payloads.withColumn("response", col("response").choices[0].text)
 
 # COMMAND ----------
 
-from pyspark.sql.functions import row_number, lit
-from pyspark.sql.window import Window
-
-#add client_request_id column to the test table
+# Load the test_df table and add the client_request_id column
 test_df = spark.read.table("ang_nara_catalog.llmops.create_test_data")
 test_df = test_df.withColumnRenamed("response", "ground_truth")
 windowSpec = Window.orderBy(lit(1))
 test_df = test_df.withColumn("client_request_id", F.row_number().over(windowSpec))
 
+# Load the payloads table
+payloads = spark.read.table("ang_nara_catalog.llmops.payloads")
+
+# Join ground_truth table with payloads table
+joined_df = payloads.join(test_df, "client_request_id", "inner")
+
+# Load the feedback DataFrame
+feedback_df = spark.read.csv("/Volumes/ang_nara_catalog/llmops/data/feedback.csv", header=True, inferSchema=True)
+
+# Ensure feedback_df has the correct column for join and includes 'feedback' column
+feedback_df = feedback_df.withColumnRenamed("feedback_response", "feedback")
+
+# Join feedback table with the already joined DataFrame
+final_df = joined_df.join(feedback_df, "client_request_id", "inner")
+
+
 # COMMAND ----------
 
-#join ground_truth table with inference table
-joined_df = payloads.join(test_df, "client_request_id", "inner").drop("id")
-payloads = joined_df
+# from pyspark.sql.functions import row_number, lit
+# from pyspark.sql.window import Window
+
+# #add client_request_id column to the test table
+# test_df = spark.read.table("ang_nara_catalog.llmops.create_test_data")
+# test_df = test_df.withColumnRenamed("response", "ground_truth")
+# windowSpec = Window.orderBy(lit(1))
+# test_df = test_df.withColumn("client_request_id", F.row_number().over(windowSpec))
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC ### Compute the Input / Output text evaluation metrics (e.g., toxicity, perplexity, readability) 
-# MAGIC
-# MAGIC Now that our input and output are unpacked and available as a string, we can compute their metrics. These will be analyzed by Lakehouse Monitoring so that we can understand how these metrics change over time.
-# MAGIC
-# MAGIC Feel free to add your own custom evaluation metrics here.
+# #join ground_truth table with inference table
+# joined_df = payloads.join(test_df, "client_request_id", "inner")
+# payloads = joined_df
+
+# #join feedback table with inference table
+# feedback_df = spark.read.csv("/Volumes/ang_nara_catalog/llmops/data/feedback.csv", header=True, inferSchema=True)
+# payloads = payloads.join(test_df, "client_request_id", "inner")
 
 # COMMAND ----------
-
-from pyspark.sql.functions import pandas_udf, PandasUDFType
-from pyspark.sql.types import DoubleType
-from rouge import Rouge
-import pandas as pd
 
 # Initialize ROUGE scorer
 rouge = Rouge()
@@ -169,10 +192,6 @@ def compute_rouge_score(output_series, ground_truth_series):
         rouge_scores.append(rounded_rouge_score)
     return pd.Series(rouge_scores)
 
-# COMMAND ----------
-
-from pyspark.sql import DataFrame
-from pyspark.sql import functions as F
 def compute_metrics(requests_df: DataFrame, column_to_measure = ["request", "response"]) -> DataFrame:
   for column_name in column_to_measure:
     requests_df = requests_df.withColumn("rouge_score", compute_rouge_score(requests_df["response"], requests_df["ground_truth"]))
@@ -180,17 +199,11 @@ def compute_metrics(requests_df: DataFrame, column_to_measure = ["request", "res
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC We can now incrementally consume new payload from the inference table, unpack them, compute metrics and save them to our final processed table:
-
-# COMMAND ----------
-
-payloads = payloads.drop("date", "status_code", "sampling_fraction", "client_request_id", "databricks_request_id", "note", "request_metadata", "instruction", "prompt")
-
-# COMMAND ----------
+#drop unnecessary columns from final dataframe
+final_df = final_df.drop("date", "status_code", "sampling_fraction", "client_request_id", "databricks_request_id", "note", "request_metadata", "instruction", "prompt")
 
 #write processed payloads to delta table
-payloads.write.format("delta").mode("overwrite").saveAsTable("ang_nara_catalog.llmops.processed_payloads")
+final_df.write.format("delta").mode("overwrite").saveAsTable("ang_nara_catalog.llmops.processed_payloads")
 
 # COMMAND ----------
 
@@ -243,7 +256,6 @@ requests_with_metrics.writeStream \
 
 # COMMAND ----------
 
-from pyspark.sql import types as T
 """
 Optional parameters to control monitoring analysis. For help, use the command help(lm.create_monitor).
 """
@@ -252,10 +264,6 @@ SLICING_EXPRS = None                             # Expressions to slice data wit
 BASELINE_TABLE = None                            # Baseline table name, if any, for computing baseline drift
 
 # COMMAND ----------
-
-from pyspark.sql.types import DoubleType
-
-import databricks.lakehouse_monitoring as lm
 
 monitor_params = {
     "profile_type": lm.TimeSeries(
