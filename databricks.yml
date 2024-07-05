@@ -4,9 +4,9 @@ workspace:
   host: https://e2-demo-field-eng.cloud.databricks.com/
 resources:
   jobs:
-    development_clinical_summarization_pipeline:
+    clinical_notes_summarization_pipeline:
       name: "[${bundle.environment}]clinical_notes_summarization_pipeline"
-      description: LLMOps pipeline for text summarization
+      description: LLMOps pipeline for text summarization using instruction finetuning API
       trigger:
         pause_status: PAUSED
         file_arrival:
