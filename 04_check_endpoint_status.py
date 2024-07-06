@@ -9,7 +9,7 @@ import json
 import time
 
 client = get_deploy_client("databricks")
-endpoint = client.get_endpoint(endpoint="ft_mistral7b_endpoint")
+endpoint = client.get_endpoint(endpoint="ift-medbrief8b-endpoint")
 
 def check_state(endpoint):
     data = json.loads(endpoint)
