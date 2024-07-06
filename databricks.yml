@@ -135,7 +135,7 @@ environments:
   development:
     default: true
     resources:
-      pipelines:
+      jobs:
         clinical_notes_summarization_pipeline:
           development: true
 
@@ -143,7 +143,7 @@ environments:
     workspace:
       host: https://e2-demo-west.cloud.databricks.com/
     resources:
-      pipelines:
+      jobs:
         clinical_notes_summarization_pipeline:
           permissions:
           - level: CAN_VIEW
