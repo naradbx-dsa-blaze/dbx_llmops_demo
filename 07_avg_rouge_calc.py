@@ -47,4 +47,4 @@ while True:
 
  #Set and get the updated ROUGE average using Databricks Utilities
 dbutils.jobs.taskValues.set(key = "rouge", value = rouge_average)
-dbutils.jobs.taskValues.get(taskKey="09_avg_rouge_calc", key="rouge", default=rouge_average, debugValue=rouge_average)
+dbutils.jobs.taskValues.get(taskKey="07_avg_rouge_calc", key="rouge", default=rouge_average, debugValue=rouge_average)
