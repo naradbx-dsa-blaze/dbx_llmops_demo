@@ -69,7 +69,7 @@ while payloads.count() < 1:
     time.sleep(120)  # Adjust the sleep duration as needed
     payloads = spark.table(payload_table_name)
 
-print("Payload count greater than 1. Continuing...")
+print("Payload count is 1. Continuing...")
 
 # COMMAND ----------
 
