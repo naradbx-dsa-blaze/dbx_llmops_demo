@@ -7,6 +7,7 @@
 import gradio as gr
 import mlflow.deployments
 import pandas as pd
+import os
 
 class MedicalHistorySummarizer:
     def __init__(self):
@@ -31,18 +32,29 @@ class MedicalHistorySummarizer:
             return f"Error during summarization: {e}"
 
     def save_feedback(self, client_request_id, summary, feedback):
+        file_path = "/Volumes/ang_nara_catalog/llmops/data/feedback_data.csv"
         try:
-            # Create a DataFrame to store the feedback
-            feedback_data = pd.DataFrame({
-                "clint_request_id": [client_request_id],
+            # Load existing data if file exists, otherwise create an empty DataFrame
+            if os.path.isfile(file_path):
+                existing_data = pd.read_csv(file_path)
+            else:
+                existing_data = pd.DataFrame(columns=["client_request_id", "response", "feedback"])
+
+            # Create a new DataFrame for the new feedback
+            new_feedback = pd.DataFrame({
+                "client_request_id": [client_request_id],
                 "response": [summary],
                 "feedback": [feedback]
             })
-            # Save the feedback to a CSV file
-            feedback_data.to_csv("/Volumes/ang_nara_catalog/llmops/data/feedback_data.csv", index=False)
+
+            # Append the new feedback to the existing data
+            updated_data = pd.concat([existing_data, new_feedback], ignore_index=True)
+
+            # Write the entire DataFrame back to the CSV file
+            updated_data.to_csv(file_path, index=False)
+
             return f"Feedback recorded: {feedback}"
         except Exception as e:
-            # Return an error message if saving feedback fails
             return f"Error saving feedback: {e}"
 
 # Instantiate the summarizer
@@ -117,3 +129,12 @@ with gr.Blocks(title=title) as interface:
 
 # Launch the Gradio interface
 interface.launch(share=True)
+
+# COMMAND ----------
+
+import os
+file_path = "/Volumes/ang_nara_catalog/llmops/data/feedback_data.csv"
+if os.path.isfile(file_path):
+  print("yes")
+else:
+  print("no")
