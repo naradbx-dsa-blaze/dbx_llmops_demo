@@ -65,7 +65,7 @@ print(f"Processed requests with text evaluation metrics will be saved to: {proce
 payloads = spark.table(payload_table_name)
 
 while payloads.count() < 1:
-    print("Waiting for more payloads to be logged...")
+    print("Waiting for atleast 1 payload to be logged...")
     time.sleep(120)  # Adjust the sleep duration as needed
     payloads = spark.table(payload_table_name)
 

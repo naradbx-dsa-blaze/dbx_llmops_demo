@@ -129,12 +129,3 @@ with gr.Blocks(title=title) as interface:
 
 # Launch the Gradio interface
 interface.launch(share=True)
-
-# COMMAND ----------
-
-import os
-file_path = "/Volumes/ang_nara_catalog/llmops/data/feedback_data.csv"
-if os.path.isfile(file_path):
-  print("yes")
-else:
-  print("no")
