@@ -137,39 +137,15 @@ test_df = test_df.withColumnRenamed("response", "ground_truth")
 windowSpec = Window.orderBy(lit(1))
 test_df = test_df.withColumn("client_request_id", F.row_number().over(windowSpec))
 
-# Load the payloads table
-payloads = spark.read.table("ang_nara_catalog.llmops.payloads")
-
 # Join ground_truth table with payloads table
 joined_df = payloads.join(test_df, "client_request_id", "inner")
 
 # Load the feedback DataFrame
 feedback_df = spark.read.csv("/Volumes/ang_nara_catalog/llmops/data/feedback_data.csv", header=True, inferSchema=True)
+feedback_df = feedback_df.drop("response")
 
 # Join feedback table with the already joined DataFrame
 final_df = joined_df.join(feedback_df, "client_request_id", "inner")
-
-
-# COMMAND ----------
-
-# from pyspark.sql.functions import row_number, lit
-# from pyspark.sql.window import Window
-
-# #add client_request_id column to the test table
-# test_df = spark.read.table("ang_nara_catalog.llmops.create_test_data")
-# test_df = test_df.withColumnRenamed("response", "ground_truth")
-# windowSpec = Window.orderBy(lit(1))
-# test_df = test_df.withColumn("client_request_id", F.row_number().over(windowSpec))
-
-# COMMAND ----------
-
-# #join ground_truth table with inference table
-# joined_df = payloads.join(test_df, "client_request_id", "inner")
-# payloads = joined_df
-
-# #join feedback table with inference table
-# feedback_df = spark.read.csv("/Volumes/ang_nara_catalog/llmops/data/feedback.csv", header=True, inferSchema=True)
-# payloads = payloads.join(test_df, "client_request_id", "inner")
 
 # COMMAND ----------
 
@@ -204,54 +180,50 @@ final_df.write.format("delta").mode("overwrite").saveAsTable("ang_nara_catalog.l
 
 # COMMAND ----------
 
-# Initialize the processed requests table. Turn on CDF (for monitoring) and enable special characters in column names. 
 def create_processed_table_if_not_exists(table_name, requests_with_metrics):
-    DeltaTable.createIfNotExists(spark) \
-        .tableName(table_name) \
-        .addColumns(requests_with_metrics.schema) \
-        .property("delta.enableChangeDataFeed", "true") \
-        .property("delta.columnMapping.mode", "name") \
-        .property("delta.minReaderVersion", "2") \
-        .property("delta.minWriterVersion", "5") \
-        .execute()
+    if not DeltaTable.isDeltaTable(spark, table_name):
+        DeltaTable.createIfNotExists(spark) \
+            .tableName(table_name) \
+            .addColumns(requests_with_metrics.schema) \
+            .property("delta.enableChangeDataFeed", "true") \
+            .property("delta.columnMapping.mode", "name") \
+            .property("delta.minReaderVersion", "2") \
+            .property("delta.minWriterVersion", "5") \
+            .execute()
 
 # COMMAND ----------
 
-# Initialize Spark session
-spark = SparkSession.builder.appName("StreamingApp").getOrCreate()
 
 # Define checkpoint location for streaming
 checkpoint_location = "/Volumes/ang_nara_catalog/llmops/checkpoint"
 
-# Check whether the Delta table exists before proceeding
-table_exists = DeltaTable.isDeltaTable(spark, "ang_nara_catalog.llmops.processed_payloads")
+#Check whether the table exists before proceeding.
+DeltaTable.isDeltaTable(spark, "ang_nara_catalog.llmops.processed_payloads")
 
-if table_exists:
-    # Read processed payloads table
-    requests_raw = spark.readStream.table("ang_nara_catalog.llmops.processed_payloads")
+#read processed payloads table
+requests_raw = spark.readStream.table("ang_nara_catalog.llmops.processed_payloads")
 
-    # Compute text evaluation metrics (ensure this function is defined elsewhere in your code)
-    requests_with_metrics = compute_metrics(requests_raw)
+#Compute text evaluation metrics.
+requests_with_metrics = compute_metrics(requests_raw)
 
-    # Delete the existing checkpoint directory if it exists
-    if dbutils.fs.exists(checkpoint_location):
-        dbutils.fs.rm(checkpoint_location, True)
-        print(f"Deleted old checkpoint location: {checkpoint_location}")
+#Persist the requests stream, with a defined checkpoint path for this table.
+create_processed_table_if_not_exists(processed_table_name, requests_with_metrics)
 
-    # Create a new checkpoint location as a volume
-    dbutils.fs.mkdirs(checkpoint_location)
-    print(f"Created new checkpoint location: {checkpoint_location}")
+#Delete the existing checkpoint directory
+dbutils.fs.rm(checkpoint_location, True)
+print(f"Deleted old checkpoint location: {checkpoint_location}")
 
-    # Write the streaming DataFrame to Delta table using foreachBatch
-    stream = requests_with_metrics.writeStream \
-        .trigger(processingTime="10 seconds") \
-        .foreachBatch(lambda batch_df, batch_id: batch_df.write.format("delta").mode("append").saveAsTable("ang_nara_catalog.llmops.processed_payloads")) \
-        .option("checkpointLocation", checkpoint_location) \
-        .start()
+#Create a new checkpoint location as a volume
+dbutils.fs.mkdirs(checkpoint_location)
+print(f"Created new checkpoint location: {checkpoint_location}")
 
-    stream.awaitTermination(30)
-else:
-    print("The Delta table 'ang_nara_catalog.llmops.processed_payloads' does not exist.")
+#Write the streaming DataFrame to Delta table using foreachBatch
+requests_with_metrics.writeStream \
+    .trigger(processingTime="10 seconds") \
+    .foreachBatch(lambda batch_df, batch_id: batch_df.write.format("delta").mode("append").saveAsTable(processed_table_name)) \
+    .option("checkpointLocation", checkpoint_location) \
+    .start() \
+    .awaitTermination(30)
 
 # COMMAND ----------
 
