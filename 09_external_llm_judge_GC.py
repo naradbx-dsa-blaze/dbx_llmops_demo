@@ -105,7 +105,6 @@ test_data = {
   ]
 }
 
-
 # COMMAND ----------
 
 from collections import Counter
