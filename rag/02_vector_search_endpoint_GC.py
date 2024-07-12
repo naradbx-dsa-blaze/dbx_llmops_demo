@@ -95,8 +95,8 @@ time.sleep(300)
 from databricks.sdk import WorkspaceClient
 import databricks.sdk.service.catalog as c
 
-catalog = 'guanyu_chen'
-db = 'dbml'
+catalog = 'ang_nara_catalog'
+db = 'llmops'
 
 #The table we'd like to index
 source_table_fullname = f"{catalog}.{db}.databricks_pdf_documentation"
@@ -128,7 +128,7 @@ from mlflow.deployments import get_deploy_client
 # bge-large-en Foundation models are available using the /serving-endpoints/databricks-bge-large-en/invocations api. 
 deploy_client = get_deploy_client("databricks")
 
-question = "How can I track billing usage on my workspaces?"
+question = "What was the diagnosis and treatment plan for the patient's left superior carotid-ophthalmic aneurysm and what follow-up care is recommended?"
 
 response = deploy_client.predict(endpoint="databricks-bge-large-en", inputs={"input": [question]})
 embeddings = [e['embedding'] for e in response.data]

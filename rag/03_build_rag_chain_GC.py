@@ -23,14 +23,14 @@ def extract_history(input):
     return input[:-1]
 
 is_question_about_databricks_str = """
-You are classifying documents to know if this question is related with Databricks in AWS, Azure and GCP, Workspaces, Databricks account and cloud infrastructure setup, Data Science, Data Engineering, Big Data, Datawarehousing, SQL, Python and Scala or something from a very different field. Also answer no if the last part is inappropriate. 
+You are classifying documents to know if this question is related to patient clinical history, discharge summary, treatment performed for specific disease  or something from a very different field. Also answer no if the last part is inappropriate. 
 
 Here are some examples:
 
-Question: Knowing this followup history: What is Databricks?, classify this question: Do you have more details?
+Question: Knowing this followup history: What treatment regimens were used for the patient's relapsed AML with concurrent molecular aberration recurrence after remission duration?, classify this question: Do you have more details?
 Expected Response: Yes
 
-Question: Knowing this followup history: What is Databricks?, classify this question: Write me a song.
+Question: Knowing this followup history: What treatment regimens were used for the patient's relapsed AML with concurrent molecular aberration recurrence after remission duration?, classify this question: Write me a song.
 Expected Response: No
 
 Only answer with "yes" or "no". 
@@ -56,15 +56,15 @@ is_about_databricks_chain = (
 #Returns "Yes" as this is about Databricks: 
 print(is_about_databricks_chain.invoke({
     "messages": [
-        {"role": "user", "content": "What is Apache Spark?"}, 
-        {"role": "assistant", "content": "Apache Spark is an open-source data processing engine that is widely used in big data analytics."}, 
-        {"role": "user", "content": "Does it support streaming?"}
+        {"role": "user", "content": "What treatment regimens were used for the patient's relapsed AML with concurrent molecular aberration recurrence after remission duration?"}, 
+        {"role": "assistant", "content": "The patient underwent several treatment regimens for his relapsed AML with concurrent molecular aberration recurrence after remission duration, including venetoclax combined with azacitidine and chidamide with venetoclax and azacitidine regimen. He achieved complete remission after one course of the chidamide combined regimen."}, 
+        {"role": "user", "content": "What was this patients discharge summary?"}
     ]
 }))
 
 # COMMAND ----------
 
-#Return "no" as this isn't about Databricks
+#Return "no" as this isn't about patient history
 print(is_about_databricks_chain.invoke({
     "messages": [
         {"role": "user", "content": "What is the meaning of life?"}
@@ -229,8 +229,8 @@ def test_demo_permissions(host, secret_scope, secret_key, vs_endpoint_name, inde
 
 # COMMAND ----------
 
-catalog = 'guanyu_chen'
-db = 'dbml'
+catalog = 'ang_nara_catalog'
+db = 'llmops'
 VECTOR_SEARCH_ENDPOINT_NAME = 'dbdoc_vs_endpoint'
 
 index_name=f"{catalog}.{db}.databricks_pdf_documentation_self_managed_vs_index"
@@ -311,7 +311,7 @@ retrieve_document_chain = (
     | RunnableLambda(extract_question)
     | retriever
 )
-print(retrieve_document_chain.invoke({"messages": [{"role": "user", "content": "What is Apache Spark?"}]}))
+print(retrieve_document_chain.invoke({"messages": [{"role": "user", "content": "What treatment regimens were used for the patient's relapsed AML with concurrent molecular aberration recurrence after remission duration?"}]}))
 
 # COMMAND ----------
 
@@ -345,16 +345,16 @@ generate_query_to_retrieve_context_chain = (
 #Let's try it
 output = generate_query_to_retrieve_context_chain.invoke({
     "messages": [
-        {"role": "user", "content": "What is Apache Spark?"}
+        {"role": "user", "content": "What treatment regimens were used for the patient's relapsed AML with concurrent molecular aberration recurrence after remission duration?"}
     ]
 })
 print(f"Test retriever query without history: {output}")
 
 output = generate_query_to_retrieve_context_chain.invoke({
     "messages": [
-        {"role": "user", "content": "What is Apache Spark?"}, 
-        {"role": "assistant", "content": "Apache Spark is an open-source data processing engine that is widely used in big data analytics."}, 
-        {"role": "user", "content": "Does it support streaming?"}
+        {"role": "user", "content": "What treatment regimens were used for the patient's relapsed AML with concurrent molecular aberration recurrence after remission duration?"}, 
+        {"role": "assistant", "content": "The patient underwent several treatment regimens for his relapsed AML with concurrent molecular aberration recurrence after remission duration, including venetoclax combined with azacitidine and chidamide with venetoclax and azacitidine regimen. He achieved complete remission after one course of the chidamide combined regimen."}, 
+        {"role": "user", "content": "What was this patients discharge summary?"}
     ]
 })
 print(f"Test retriever question, summarized with history: {output}")
@@ -413,7 +413,7 @@ relevant_question_chain = (
 )
 
 irrelevant_question_chain = (
-  RunnableLambda(lambda x: {"result": 'I cannot answer questions that are not about Databricks.', "sources": []})
+  RunnableLambda(lambda x: {"result": 'I cannot answer questions that are not about patients history or treatments.', "sources": []})
 )
 
 branch_node = RunnableBranch(
@@ -436,8 +436,8 @@ full_chain = (
 import json
 non_relevant_dialog = {
     "messages": [
-        {"role": "user", "content": "What is Apache Spark?"}, 
-        {"role": "assistant", "content": "Apache Spark is an open-source data processing engine that is widely used in big data analytics."}, 
+        {"role": "user", "content": "What treatment regimens were used for the patient's relapsed AML with concurrent molecular aberration recurrence after remission duration?"}, 
+        {"role": "assistant", "content": "The patient underwent several treatment regimens for his relapsed AML with concurrent molecular aberration recurrence after remission duration, including venetoclax combined with azacitidine and chidamide with venetoclax and azacitidine regimen. He achieved complete remission after one course of the chidamide combined regimen."}, 
         {"role": "user", "content": "Why is the sky blue?"}
     ]
 }
@@ -449,9 +449,9 @@ print(non_relevant_dialog["messages"], response)
 
 dialog = {
     "messages": [
-        {"role": "user", "content": "What is Apache Spark?"}, 
-        {"role": "assistant", "content": "Apache Spark is an open-source data processing engine that is widely used in big data analytics."}, 
-        {"role": "user", "content": "Does it support streaming?"}
+        {"role": "user", "content": "What treatment regimens were used for the patient's relapsed AML with concurrent molecular aberration recurrence after remission duration?"}, 
+        {"role": "assistant", "content": "The patient underwent several treatment regimens for his relapsed AML with concurrent molecular aberration recurrence after remission duration, including venetoclax combined with azacitidine and chidamide with venetoclax and azacitidine regimen. He achieved complete remission after one course of the chidamide combined regimen."}, 
+        {"role": "user", "content": "What was this patients discharge summary?"}
     ]
 }
 print(f'Testing with relevant history and question...')
@@ -465,8 +465,8 @@ import langchain
 import mlflow
 from mlflow.models import infer_signature
 
-catalog = 'guanyu_chen'
-db = 'dbml'
+catalog = 'ang_nara_catalog'
+db = 'llmops'
 
 mlflow.set_registry_uri("databricks-uc")
 model_name = f"{catalog}.{db}.db_chatbot_model"

@@ -23,8 +23,8 @@ from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedModelInput, ServedModelInputWorkloadSize, AutoCaptureConfigInput, AutoCaptureState,PayloadTable
 import json
 
-catalog = 'guanyu_chen'
-db = 'dbml'
+catalog = 'ang_nara_catalog'
+db = 'llmops'
 host = "https://" + spark.conf.get("spark.databricks.workspaceUrl")
 
 model_name = f"{catalog}.{db}.db_chatbot_model"
@@ -81,15 +81,15 @@ data = {
   "messages": [
     {
       "role": "user",
-      "content": "What is Apache Spark?"
+      "content": "What treatment regimens were used for the patient's relapsed AML with concurrent molecular aberration recurrence after remission duration?"
     },
     {
       "role": "assistant",
-      "content": "Apache Spark is an open-source data processing engine that is widely used in big data analytics."
+      "content": "The patient underwent several treatment regimens for his relapsed AML with concurrent molecular aberration recurrence after remission duration, including venetoclax combined with azacitidine and chidamide with venetoclax and azacitidine regimen. He achieved complete remission after one course of the chidamide combined regimen."
     },
     {
       "role": "user",
-      "content": "Does it support streaming?"
+      "content": "What was this patients discharge summary?"
     }
   ]
 }
