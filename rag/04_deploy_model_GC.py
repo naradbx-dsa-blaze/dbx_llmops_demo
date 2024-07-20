@@ -29,7 +29,7 @@ host = "https://" + spark.conf.get("spark.databricks.workspaceUrl")
 
 model_name = f"{catalog}.{db}.db_chatbot_model"
 
-table_name_prefix = 'db_rag'
+table_name_prefix = 'clinical_rag'
 
 serving_endpoint_name = f"db_endpoint_{catalog}_{db}"[:63]
 latest_model_version = get_latest_model_version(model_name)
