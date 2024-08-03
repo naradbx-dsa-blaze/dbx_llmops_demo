@@ -159,8 +159,6 @@ def log_likelihood(probabilities, truth_index):
 
 # COMMAND ----------
 
-
-
 def extract_qa_pairs(data):
     messages = data["messages"]
     qa_pairs = []

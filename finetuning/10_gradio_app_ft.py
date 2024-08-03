@@ -129,3 +129,9 @@ with gr.Blocks(title=title) as interface:
 
 # Launch the Gradio interface
 interface.launch(share=True)
+
+# COMMAND ----------
+
+# MAGIC %environment
+# MAGIC "client": "1"
+# MAGIC "base_environment": ""

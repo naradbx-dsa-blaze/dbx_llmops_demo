@@ -90,3 +90,9 @@ else:
 
     print(json.dumps(response.json(), indent=4))
 
+
+# COMMAND ----------
+
+# MAGIC %environment
+# MAGIC "client": "1"
+# MAGIC "base_environment": ""

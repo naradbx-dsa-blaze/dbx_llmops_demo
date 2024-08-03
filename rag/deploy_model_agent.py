@@ -29,3 +29,9 @@ deployment.query_endpoint
 # Copy deployment.rag_app_url to browser and start interacting with your RAG application.
 deployment.rag_app_url
 
+
+# COMMAND ----------
+
+# MAGIC %environment
+# MAGIC "client": "1"
+# MAGIC "base_environment": ""

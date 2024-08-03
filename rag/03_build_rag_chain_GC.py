@@ -30,6 +30,18 @@ Here are some examples:
 Question: Knowing this followup history: What treatment regimens were used for the patient's relapsed AML with concurrent molecular aberration recurrence after remission duration?, classify this question: Do you have more details?
 Expected Response: Yes
 
+Question: Knowing this followup history: What treatment regimens were used for the patient's relapsed AML with concurrent molecular aberration recurrence after remission duration?, classify this question: Do you know the full form of AML?
+Expected Response: Yes
+
+Question: Knowing this followup history: What treatment regimens were used for the patient's relapsed AML with concurrent molecular aberration recurrence after remission duration?, classify this question: Do you know the composition of drug used to cure AML?
+Expected Response: Yes
+
+Question: Answer any question related to medicine or patient information: what is the composition of drug Penicillin G?, classify this question: Do you have more details?
+Expected Response: Yes
+
+Question: Medical document transaltion to Dutch or French depending upon user question: What treatment regimens were used for the patient's relapsed AML with concurrent molecular aberration recurrence after remission duration?, classify this question: Translate the answer to French or Dutch depending upon user prompt
+Expected Response: Yes
+
 Question: Knowing this followup history: What treatment regimens were used for the patient's relapsed AML with concurrent molecular aberration recurrence after remission duration?, classify this question: Write me a song.
 Expected Response: No
 
@@ -64,10 +76,73 @@ print(is_about_databricks_chain.invoke({
 
 # COMMAND ----------
 
+#Returns "Yes" as this is about Databricks: 
+print(is_about_databricks_chain.invoke({
+    "messages": [
+        {"role": "user", "content": "Do you know the composition of drug used to cure AML?"}, 
+        {"role": "assistant", "content": "Gemtuzumab ozogamicin combines the monoclonal antibody gemtuzumab, which targets CD33 on leukemia cells, with the cytotoxic agent ozogamicin, an antibiotic that kills the targeted cells. This drug is used to treat relapsed AML by delivering targeted chemotherapy."}, 
+        {"role": "user", "content": "What is the recommended dosage for stage III AML?"},
+        {"role": "assistant", "content": "For relapsed or refractory AML, Gemtuzumab ozogamicin is typically dosed at 6 mg/m² intravenously over 1 hour on days 1, 8, and 15 of a 28-day cycle. This regimen may vary based on individual patient factors and response. Dosage for stage 3 AML specifically depends on the overall treatment plan and should be tailored by a healthcare provider."}
+    ]
+}))
+
+# COMMAND ----------
+
+#Returns "Yes" as this is about Databricks: 
+print(is_about_databricks_chain.invoke({
+    "messages": [
+        {"role": "user", "content": "What was the patient's diagnosis and treatment plan for multiple thrombotic events associated with antithrombin deficiency (ATD) according to the discharge summary?"}, 
+        {"role": "assistant", "content": "The patient was diagnosed with deep vein thrombosis (DVT) of the right lower extremity, left lower extremity, both iliac vessels, and inferior vena cava (IVC) associated with antithrombin deficiency (ATD). The treatment plan involved catheter-directed local thrombolysis using recombinant tissue plasminogen activator (rt-PA), followed by anticoagulative therapy with vitamin K antagonist phenprocoumon. To prevent re-thrombosis, oral anticoagulation with phenprocoumon should be continued lifelong and regular follow-up examinations should be done at the outpatient clinic. The patient and their family should be counseled on the importance of continued medical management for ATD. While interventions were done for thrombotic lesions in the right lower extremity and pelvic axis, the left iliac vessels remained thrombotic and required further interventions. Therefore, more interventions should be considered for thrombotic lesions found in the pelvic vessels."}, 
+        {"role": "user", "content": "Please translate the above response to French"},
+        {"role": "assistant", "content": "Le patient a été diagnostiqué avec une thrombose veineuse profonde (TVP) de l'extrémité inférieure droite, de l'extrémité inférieure gauche, des deux vaisseaux iliaques et de la veine cave inférieure (VCI) associée à une déficience en antithrombine (ATD). Le plan de traitement a impliqué une thrombolyse locale dirigée par cathéter utilisant un activateur recombinant du plasminogène (rt-PA), suivie d'une thérapie anticoagulante avec l'antagoniste de la vitamine K, le phénprocoumone. Pour prévenir la re-thrombose, l'anticoagulation orale avec le phénprocoumone doit être poursuivie à vie et des examens de suivi réguliers doivent être effectués en consultation externe. Le patient et sa famille doivent être informés de l'importance d'une gestion médicale continue pour l'ATD. Bien que des interventions aient été réalisées pour les lésions thrombotiques dans l'extrémité inférieure droite et l'axe pelvien, les vaisseaux iliaques gauches sont restés thrombotiques et nécessitent des interventions supplémentaires. Par conséquent, des interventions supplémentaires doivent être envisagées pour les lésions thrombotiques trouvées dans les vaisseaux pelviens."}
+    ]
+}))
+
+# COMMAND ----------
+
+#Returns "Yes" as this is about Databricks: 
+print(is_about_databricks_chain.invoke({
+    "messages": [
+        {"role": "user", "content": "What treatments were given to the 4.3-year-old boy in the given discharge summary for his fibrinoid formation in the right upper lobe, and what was the outcome of those treatments?"}, 
+        {"role": "assistant", "content": "The 4.3-year-old boy with fibrinoid formation in the right upper lobe was given cephalothin and azithromycin initially, but due to worsening symptoms and hypoxemia, he required ventilatory support and additional treatment with methylprednisolone. Thoracentesis was performed to remove pleural fluid, and further diagnostic tests confirmed his recovery. He was discharged with oral azithromycin. The outcome of these treatments was a return to normal temperature and recovery from his respiratory infection."}, 
+        {"role": "user", "content": "Please translate the above response to Dutch"},
+        {"role": "assistant", "content": "De 4,3-jarige jongen met fibrinoïde vorming in de rechter bovenkwab kreeg aanvankelijk cephalotine en azitromycine, maar vanwege verslechterende symptomen en hypoxemie had hij ventilatoire ondersteuning en aanvullende behandeling met methylprednisolon nodig. Een thoracentese werd uitgevoerd om pleuravocht te verwijderen, en verdere diagnostische tests bevestigden zijn herstel. Hij werd ontslagen met orale azitromycine. Het resultaat van deze behandelingen was een terugkeer naar de normale temperatuur en herstel van zijn luchtweginfectie."}
+    ]
+}))
+
+# COMMAND ----------
+
 #Return "no" as this isn't about patient history
 print(is_about_databricks_chain.invoke({
     "messages": [
         {"role": "user", "content": "What is the meaning of life?"}
+    ]
+}))
+
+# COMMAND ----------
+
+#Return "no" as this isn't about patient history
+print(is_about_databricks_chain.invoke({
+    "messages": [
+        {"role": "user", "content": "What is the color of Water?"}
+    ]
+}))
+
+# COMMAND ----------
+
+#Return "no" as this isn't about patient history
+print(is_about_databricks_chain.invoke({
+    "messages": [
+        {"role": "user", "content": "What is capital of India?"}
+    ]
+}))
+
+# COMMAND ----------
+
+#Return "no" as this isn't about patient history
+print(is_about_databricks_chain.invoke({
+    "messages": [
+        {"role": "user", "content": "What is the scientific name of Cat?"}
     ]
 }))
 
@@ -241,40 +316,6 @@ host = "https://e2-demo-field-eng.cloud.databricks.com"
 #Setup service principal and secret scope and key
 
 test_demo_permissions(host, secret_scope="dbrag", secret_key="rag_pat_token", vs_endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME, index_name=index_name, embedding_endpoint_name="databricks-bge-large-en", managed_embeddings = False)
-
-# COMMAND ----------
-
-# from databricks.vector_search.client import VectorSearchClient
-
-# catalog = 'guanyu_chen'
-# db = 'dbml'
-# VECTOR_SEARCH_ENDPOINT_NAME = 'dbdoc_vs_endpoint'
-# client_id = 'cc109146-bfb6-412f-a488-1141a66ecad6'
-# secret_key = dbutils.secrets.get(scope="dbrag", key="rag_sp_token")
-
-# index_name=f"{catalog}.{db}.databricks_pdf_documentation_self_managed_vs_index"
-# host = "https://e2-demo-field-eng.cloud.databricks.com"
-
-# vsc = VectorSearchClient(workspace_url=host, service_principal_client_id=client_id, service_principal_client_secret=secret_key)
-
-# COMMAND ----------
-
-# from mlflow.deployments import get_deploy_client
-
-# # bge-large-en Foundation models are available using the /serving-endpoints/databricks-bge-large-en/invocations api. 
-# deploy_client = get_deploy_client("databricks")
-
-# question = "How can I track billing usage on my workspaces?"
-
-# response = deploy_client.predict(endpoint="databricks-bge-large-en", inputs={"input": [question]})
-# embeddings = [e['embedding'] for e in response.data]
-
-# results = vsc.get_index(VECTOR_SEARCH_ENDPOINT_NAME, index_name).similarity_search(
-#   query_vector=embeddings[0],
-#   columns=["url", "content"],
-#   num_results=1)
-# docs = results.get('result', {}).get('data_array', [])
-# print(docs)
 
 # COMMAND ----------
 

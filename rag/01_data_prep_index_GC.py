@@ -17,7 +17,7 @@ df = (spark.readStream
         .format('cloudFiles')
         .option('cloudFiles.format', 'BINARYFILE')
         .option("pathGlobFilter", "*.pdf")
-        .load('dbfs:'+volume_folder+"/raw_clinical_notes"))
+        .load('dbfs:'+volume_folder+"/raw_notes"))
 
 # Write the data as a Delta table
 (df.writeStream
