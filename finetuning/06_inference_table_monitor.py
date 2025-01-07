@@ -132,20 +132,21 @@ payloads = payloads.withColumn("response", col("response").choices[0].text)
 # COMMAND ----------
 
 # Load the test_df table and add the client_request_id column
-test_df = spark.read.table("ang_nara_catalog.ds_demos.test_clinical_data")
+test_df = spark.read.table("nara_catalog.ds_demos.test_clinical_data")
 test_df = test_df.withColumnRenamed("response", "ground_truth")
 windowSpec = Window.orderBy(lit(1))
 test_df = test_df.withColumn("client_request_id", F.row_number().over(windowSpec))
 
 # Join ground_truth table with payloads table
 joined_df = payloads.join(test_df, "client_request_id", "inner")
+final_df = joined_df
 
-# Load the feedback DataFrame
-feedback_df = spark.read.csv("/Volumes/ang_nara_catalog/llmops/data/feedback_data.csv", header=True, inferSchema=True)
-feedback_df = feedback_df.drop("response")
+# # Load the feedback DataFrame
+# feedback_df = spark.read.csv("/Volumes/ang_nara_catalog/llmops/data/feedback_data.csv", header=True, inferSchema=True)
+# feedback_df = feedback_df.drop("response")
 
-# Join feedback table with the already joined DataFrame
-final_df = joined_df.join(feedback_df, "client_request_id", "inner")
+# # Join feedback table with the already joined DataFrame
+# final_df = joined_df.join(feedback_df, "client_request_id", "inner")
 
 # COMMAND ----------
 
@@ -195,13 +196,13 @@ def create_processed_table_if_not_exists(table_name, requests_with_metrics):
 
 
 # Define checkpoint location for streaming
-checkpoint_location = "/Volumes/ang_nara_catalog/llmops/checkpoint"
+checkpoint_location = "/Volumes/nara_catalog/ds_demos/checkpoint"
 
 #Check whether the table exists before proceeding.
-DeltaTable.isDeltaTable(spark, "ang_nara_catalog.llmops.processed_payloads")
+DeltaTable.isDeltaTable(spark, "nara_catalog.ds_demos.processed_payloads")
 
 #read processed payloads table
-requests_raw = spark.readStream.table("ang_nara_catalog.llmops.processed_payloads")
+requests_raw = spark.readStream.table("nara_catalog.ds_demos.processed_payloads")
 
 #Compute text evaluation metrics.
 requests_with_metrics = compute_metrics(requests_raw)
