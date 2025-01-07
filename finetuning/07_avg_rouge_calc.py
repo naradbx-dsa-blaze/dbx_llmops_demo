@@ -14,7 +14,7 @@ def table_exists(spark, table_name):
         return False
 
 # Define the table name
-table_name = "ang_nara_catalog.llmops.`ift-medbrief8b-endpoint_processed_profile_metrics`"
+table_name = "nara_catalog.ds_demos.`ift-medbrief8b-endpoint_processed_profile_metrics`"
 
 # Wait until the table is created
 while not table_exists(spark, table_name):
