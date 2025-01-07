@@ -12,7 +12,7 @@ ps.set_option('compute.ops_on_diff_frames', True)
 @dlt.table
 def load_data():
   data = pd.read_csv(
-        "/Volumes/ang_nara_catalog/llmops/data/synthetic.csv"
+        "/Volumes/nara_catalog/ds_demos/data/synthetic.csv"
     )
   return spark.createDataFrame(data)
 
@@ -52,7 +52,7 @@ def create_train_data():
   df = dlt.read('format_notes')
   df = df.limit(15000)
   df=df.drop("note", "patient_id")
-  df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.train_clinical_data")  
+  df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("nara_catalog.ds_demos.train_clinical_data")  
   return df
 
 # COMMAND ----------
@@ -63,5 +63,5 @@ def create_test_data():
   sorted_df = df.orderBy(col("patient_id").desc())
   last_5000_rows = sorted_df.limit(5000)
   last_5000_rows = last_5000_rows.drop("note", "patient_id")
-  last_5000_rows.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("ang_nara_catalog.llmops.test_clinical_data")    
+  last_5000_rows.write.format("delta").mode("overwrite").option("overwriteSchema", "true").option("readChangeFeed", "true").saveAsTable("nara_catalog.ds_demos.test_clinical_data")    
   return last_5000_rows
