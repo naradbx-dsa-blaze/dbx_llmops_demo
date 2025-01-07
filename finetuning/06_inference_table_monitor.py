@@ -132,7 +132,7 @@ payloads = payloads.withColumn("response", col("response").choices[0].text)
 # COMMAND ----------
 
 # Load the test_df table and add the client_request_id column
-test_df = spark.read.table("ang_nara_catalog.llmops.create_test_data")
+test_df = spark.read.table("ang_nara_catalog.ds_demos.test_clinical_data")
 test_df = test_df.withColumnRenamed("response", "ground_truth")
 windowSpec = Window.orderBy(lit(1))
 test_df = test_df.withColumn("client_request_id", F.row_number().over(windowSpec))
@@ -176,7 +176,7 @@ def compute_metrics(requests_df: DataFrame, column_to_measure = ["request", "res
 final_df = final_df.drop("date", "status_code", "sampling_fraction", "client_request_id", "databricks_request_id", "note", "request_metadata", "instruction", "prompt")
 
 #write processed payloads to delta table
-final_df.write.format("delta").mode("overwrite").saveAsTable("ang_nara_catalog.llmops.processed_payloads")
+final_df.write.format("delta").mode("overwrite").saveAsTable("nara_catalog.ds_demos.processed_payloads")
 
 # COMMAND ----------
 
