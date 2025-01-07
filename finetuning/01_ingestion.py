@@ -12,7 +12,7 @@ ps.set_option('compute.ops_on_diff_frames', True)
 @dlt.table
 def load_data():
   data = pd.read_csv(
-        "/Volumes/nara_catalog/ds_demos/data/synthetic.csv"
+        "/Volumes/nara_catalog/ds_demos/raw_notes/synthetic.csv"
     )
   return spark.createDataFrame(data)
 
