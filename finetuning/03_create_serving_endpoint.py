@@ -6,7 +6,7 @@ import json
 endpoint_name = "ift-medbrief8b-endpoint"
 
 # Name of the registered MLflow model
-model_name = "ang_nara_catalog.llmops.ift-medbrief8b"
+model_name = "nara_catalog.ds_demos.ift-medbrief8b"
 
 # Get the latest version of the MLflow model
 model_version = 2
@@ -90,9 +90,3 @@ else:
 
     print(json.dumps(response.json(), indent=4))
 
-
-# COMMAND ----------
-
-# MAGIC %environment
-# MAGIC "client": "1"
-# MAGIC "base_environment": ""
