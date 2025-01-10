@@ -9,7 +9,7 @@ endpoint_name = "ift-medbrief8b-endpoint"
 model_name = "nara_catalog.ds_demos.ift-medbrief8b"
 
 # Get the latest version of the MLflow model
-model_version = 2
+model_version = 1
 
 # Get the API endpoint and token for the current notebook context
 API_ROOT = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiUrl().get()
