@@ -73,7 +73,7 @@ else:
                 }
              ]
           },
-          "auto_capture_config":{
+          "ai_gateway":{
              "catalog_name":"ang_nara_catalog",
              "schema_name":"llmops",
              "table_name_prefix": endpoint_name,
