@@ -71,8 +71,8 @@ else:
              ]
           },
           "ai_gateway":{
-             "catalog_name":"ang_nara_catalog",
-             "schema_name":"llmops",
+             "catalog_name":"nara_catalog",
+             "schema_name":"ds_demos",
              "table_name_prefix": endpoint_name,
              "enabled":True
           }
